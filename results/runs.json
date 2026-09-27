@@ -1,0 +1,1602 @@
+{
+ "config": {
+  "seeds": 5,
+  "horizon": 28,
+  "top_k": 10,
+  "members": 8,
+  "time_limit": 60.0,
+  "out": "/home/claude/georipple-benchmark/experiments/../results/runs.json"
+ },
+ "runs": [
+  {
+   "seed": 0,
+   "hazard": "gulf_hurricane_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.46153846153846156,
+     "recall": 1.0,
+     "mae_days": 17.0,
+     "n_true": 30,
+     "n_pred": 65
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.9666666666666667,
+     "mae_days": 0.45,
+     "n_true": 30,
+     "n_pred": 29
+    },
+    "A1": {
+     "precision": 0.46153846153846156,
+     "recall": 1.0,
+     "mae_days": 15.592307692307692,
+     "n_true": 30,
+     "n_pred": 65
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.9666666666666667,
+     "mae_days": 0.45,
+     "n_true": 30,
+     "n_pred": 29
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.8616055115345719,
+     "unmet_units": 1234.3450749085955,
+     "ttr95_days": 22.0,
+     "cost_k": 0.0,
+     "n_affected": 30
+    },
+    "Full": {
+     "fill_rate": 0.9286562572929139,
+     "unmet_units": 651.1019652003056,
+     "ttr95_days": 17.0,
+     "cost_k": 24.22297792286692,
+     "n_affected": 30
+    },
+    "A2": {
+     "fill_rate": 0.9292781491261367,
+     "unmet_units": 645.2867542501906,
+     "ttr95_days": 22.0,
+     "cost_k": 25.470358287580716,
+     "n_affected": 30
+    },
+    "A3": {
+     "fill_rate": 0.9286562572929139,
+     "unmet_units": 651.1019652003056,
+     "ttr95_days": 17.0,
+     "cost_k": 24.22297792286692,
+     "n_affected": 30
+    },
+    "B3": {
+     "fill_rate": 0.9602926086718652,
+     "unmet_units": 1653.5161502038713,
+     "ttr95_days": 11.0,
+     "cost_k": 53.82712921143082,
+     "n_affected": 30
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 58583,
+     "n_candidates": 91,
+     "objective": 651592.7322888934,
+     "gap": 0.008813363733387973,
+     "plan_seconds": 6.664679798000066,
+     "activated": 16
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 59047,
+     "n_candidates": 107,
+     "objective": 644931.4233077868,
+     "gap": 0.009863078852747608,
+     "plan_seconds": 1.5819764080000596,
+     "activated": 16
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 58583,
+     "n_candidates": 91,
+     "objective": 651592.7322888934,
+     "gap": 0.008813363733387973,
+     "plan_seconds": 6.130583925999986,
+     "activated": 16
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 6.683938889000046,
+   "wall_seconds": 14.706945743999995
+  },
+  {
+   "seed": 0,
+   "hazard": "statewide_winter_storm",
+   "prediction": {
+    "B1": {
+     "precision": 0.35365853658536583,
+     "recall": 1.0,
+     "mae_days": 19.902439024390244,
+     "n_true": 29,
+     "n_pred": 82
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.3793103448275862,
+     "mae_days": 11.793103448275861,
+     "n_true": 29,
+     "n_pred": 11
+    },
+    "A1": {
+     "precision": 0.35365853658536583,
+     "recall": 1.0,
+     "mae_days": 18.695121951219512,
+     "n_true": 29,
+     "n_pred": 82
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.3793103448275862,
+     "mae_days": 11.793103448275861,
+     "n_true": 29,
+     "n_pred": 11
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.9547071799626653,
+     "unmet_units": 427.45747982792057,
+     "ttr95_days": 16.0,
+     "cost_k": 0.0,
+     "n_affected": 29
+    },
+    "Full": {
+     "fill_rate": 0.9640012794504207,
+     "unmet_units": 345.98538702252534,
+     "ttr95_days": 16.0,
+     "cost_k": 0.0,
+     "n_affected": 29
+    },
+    "A2": {
+     "fill_rate": 0.9637765819917206,
+     "unmet_units": 347.9948556393573,
+     "ttr95_days": 16.0,
+     "cost_k": 0.0,
+     "n_affected": 29
+    },
+    "A3": {
+     "fill_rate": 0.9640012794504207,
+     "unmet_units": 345.98538702252534,
+     "ttr95_days": 16.0,
+     "cost_k": 0.0,
+     "n_affected": 29
+    },
+    "B3": {
+     "fill_rate": 0.9722813833416644,
+     "unmet_units": 378.92241790260954,
+     "ttr95_days": 16.0,
+     "cost_k": 17.219065194996226,
+     "n_affected": 29
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57278,
+     "n_candidates": 46,
+     "objective": 567749.9658206868,
+     "gap": 0.0,
+     "plan_seconds": 0.8632864379999319,
+     "activated": 0
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57278,
+     "n_candidates": 46,
+     "objective": 567749.9658206868,
+     "gap": 0.0,
+     "plan_seconds": 0.8409789150000506,
+     "activated": 0
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57278,
+     "n_candidates": 46,
+     "objective": 567749.9658206868,
+     "gap": 0.0,
+     "plan_seconds": 0.8922732490000271,
+     "activated": 0
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.880112625000038,
+   "wall_seconds": 2.908329063999986
+  },
+  {
+   "seed": 0,
+   "hazard": "river_corridor_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.40476190476190477,
+     "recall": 1.0,
+     "mae_days": 18.61904761904762,
+     "n_true": 17,
+     "n_pred": 42
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.35294117647058826,
+     "mae_days": 10.235294117647058,
+     "n_true": 17,
+     "n_pred": 6
+    },
+    "A1": {
+     "precision": 0.36585365853658536,
+     "recall": 0.8823529411764706,
+     "mae_days": 17.13953488372093,
+     "n_true": 17,
+     "n_pred": 41
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.47058823529411764,
+     "mae_days": 8.647058823529411,
+     "n_true": 17,
+     "n_pred": 8
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.8094659652329116,
+     "unmet_units": 955.1425949821084,
+     "ttr95_days": 19.0,
+     "cost_k": 0.0,
+     "n_affected": 17
+    },
+    "Full": {
+     "fill_rate": 0.8555048627640098,
+     "unmet_units": 732.9654807011722,
+     "ttr95_days": 19.0,
+     "cost_k": 1.7460312871914057,
+     "n_affected": 17
+    },
+    "A2": {
+     "fill_rate": 0.8603888385873086,
+     "unmet_units": 708.1561747286355,
+     "ttr95_days": 19.0,
+     "cost_k": 4.662059971967938,
+     "n_affected": 17
+    },
+    "A3": {
+     "fill_rate": 0.8555048627640098,
+     "unmet_units": 732.9654807011722,
+     "ttr95_days": 19.0,
+     "cost_k": 1.7460312871914057,
+     "n_affected": 17
+    },
+    "B3": {
+     "fill_rate": 0.8365457879644096,
+     "unmet_units": 920.4287368291118,
+     "ttr95_days": 25.0,
+     "cost_k": 15.649275606256623,
+     "n_affected": 17
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57220,
+     "n_candidates": 44,
+     "objective": 580954.986985338,
+     "gap": 0.0019052977356097266,
+     "plan_seconds": 0.859608666999975,
+     "activated": 1
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57249,
+     "n_candidates": 45,
+     "objective": 581517.8590545853,
+     "gap": 0.005499576075072285,
+     "plan_seconds": 0.7107055559999935,
+     "activated": 3
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57220,
+     "n_candidates": 44,
+     "objective": 580954.986985338,
+     "gap": 0.0019052977356097266,
+     "plan_seconds": 0.7700055349999957,
+     "activated": 1
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.8819940359999237,
+   "wall_seconds": 2.635002340000028
+  },
+  {
+   "seed": 1,
+   "hazard": "gulf_hurricane_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.33766233766233766,
+     "recall": 1.0,
+     "mae_days": 19.38961038961039,
+     "n_true": 26,
+     "n_pred": 77
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.8846153846153846,
+     "mae_days": 3.269230769230769,
+     "n_true": 26,
+     "n_pred": 23
+    },
+    "A1": {
+     "precision": 0.33766233766233766,
+     "recall": 1.0,
+     "mae_days": 17.24025974025974,
+     "n_true": 26,
+     "n_pred": 77
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.8846153846153846,
+     "mae_days": 3.269230769230769,
+     "n_true": 26,
+     "n_pred": 23
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.8449144527673198,
+     "unmet_units": 1348.5545117536924,
+     "ttr95_days": 20.0,
+     "cost_k": 0.0,
+     "n_affected": 26
+    },
+    "Full": {
+     "fill_rate": 0.9020089381735115,
+     "unmet_units": 854.2356597965812,
+     "ttr95_days": 20.0,
+     "cost_k": 10.858083593666501,
+     "n_affected": 26
+    },
+    "A2": {
+     "fill_rate": 0.9008796251758364,
+     "unmet_units": 866.9187191442304,
+     "ttr95_days": 20.0,
+     "cost_k": 11.582982772177262,
+     "n_affected": 26
+    },
+    "A3": {
+     "fill_rate": 0.9020089381735115,
+     "unmet_units": 854.2356597965812,
+     "ttr95_days": 20.0,
+     "cost_k": 10.858083593666501,
+     "n_affected": 26
+    },
+    "B3": {
+     "fill_rate": 0.8784363802211722,
+     "unmet_units": 1732.8833472470365,
+     "ttr95_days": 24.0,
+     "cost_k": 32.03375101398392,
+     "n_affected": 26
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57367,
+     "n_candidates": 51,
+     "objective": 574155.3479919801,
+     "gap": 0.0005076191372842307,
+     "plan_seconds": 0.8648920609999777,
+     "activated": 7
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 58585,
+     "n_candidates": 93,
+     "objective": 575106.0475905994,
+     "gap": 0.006762750161181623,
+     "plan_seconds": 0.9464544270000488,
+     "activated": 8
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57367,
+     "n_candidates": 51,
+     "objective": 574155.3479919801,
+     "gap": 0.0005076191372842307,
+     "plan_seconds": 0.9007844750000231,
+     "activated": 7
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.8810586820000026,
+   "wall_seconds": 2.9874584010000262
+  },
+  {
+   "seed": 1,
+   "hazard": "statewide_winter_storm",
+   "prediction": {
+    "B1": {
+     "precision": 0.37349397590361444,
+     "recall": 1.0,
+     "mae_days": 20.93975903614458,
+     "n_true": 31,
+     "n_pred": 83
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.3870967741935484,
+     "mae_days": 9.419354838709678,
+     "n_true": 31,
+     "n_pred": 12
+    },
+    "A1": {
+     "precision": 0.37349397590361444,
+     "recall": 1.0,
+     "mae_days": 19.216867469879517,
+     "n_true": 31,
+     "n_pred": 83
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.3870967741935484,
+     "mae_days": 9.419354838709678,
+     "n_true": 31,
+     "n_pred": 12
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.9652894780735679,
+     "unmet_units": 337.8310640556668,
+     "ttr95_days": 13.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "Full": {
+     "fill_rate": 0.971124313491885,
+     "unmet_units": 282.4187032585445,
+     "ttr95_days": 13.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "A2": {
+     "fill_rate": 0.9721568288751152,
+     "unmet_units": 272.14743633158395,
+     "ttr95_days": 13.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "A3": {
+     "fill_rate": 0.971124313491885,
+     "unmet_units": 282.4187032585445,
+     "ttr95_days": 13.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "B3": {
+     "fill_rate": 0.982784050933953,
+     "unmet_units": 793.4556982516704,
+     "ttr95_days": 12.0,
+     "cost_k": 23.638388725973964,
+     "n_affected": 31
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57338,
+     "n_candidates": 50,
+     "objective": 522508.1044913356,
+     "gap": 0.0,
+     "plan_seconds": 0.9318181869999762,
+     "activated": 0
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57541,
+     "n_candidates": 57,
+     "objective": 522508.1044913356,
+     "gap": 0.0,
+     "plan_seconds": 0.9307972610000661,
+     "activated": 0
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57338,
+     "n_candidates": 50,
+     "objective": 522508.1044913356,
+     "gap": 0.0,
+     "plan_seconds": 0.9258896750000076,
+     "activated": 0
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.9502840210000159,
+   "wall_seconds": 3.1228028489999815
+  },
+  {
+   "seed": 1,
+   "hazard": "river_corridor_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.43243243243243246,
+     "recall": 1.0,
+     "mae_days": 18.45945945945946,
+     "n_true": 16,
+     "n_pred": 37
+    },
+    "B2": {
+     "precision": 0.7857142857142857,
+     "recall": 0.6875,
+     "mae_days": 7.2368421052631575,
+     "n_true": 16,
+     "n_pred": 14
+    },
+    "A1": {
+     "precision": 0.3902439024390244,
+     "recall": 1.0,
+     "mae_days": 16.548780487804876,
+     "n_true": 16,
+     "n_pred": 41
+    },
+    "Full": {
+     "precision": 0.7857142857142857,
+     "recall": 0.6875,
+     "mae_days": 6.105263157894737,
+     "n_true": 16,
+     "n_pred": 14
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.7128144936427118,
+     "unmet_units": 1393.6952581921792,
+     "ttr95_days": 25.0,
+     "cost_k": 0.0,
+     "n_affected": 16
+    },
+    "Full": {
+     "fill_rate": 0.8512299070370843,
+     "unmet_units": 735.0297828716448,
+     "ttr95_days": 18.0,
+     "cost_k": 11.979175997323338,
+     "n_affected": 16
+    },
+    "A2": {
+     "fill_rate": 0.875113856849225,
+     "unmet_units": 608.1224504828646,
+     "ttr95_days": 15.0,
+     "cost_k": 15.396664790296628,
+     "n_affected": 16
+    },
+    "A3": {
+     "fill_rate": 0.8512299070370843,
+     "unmet_units": 735.0297828716448,
+     "ttr95_days": 18.0,
+     "cost_k": 11.979175997323338,
+     "n_affected": 16
+    },
+    "B3": {
+     "fill_rate": 0.9061357921453961,
+     "unmet_units": 806.4958158037458,
+     "ttr95_days": 21.0,
+     "cost_k": 25.819104618829115,
+     "n_affected": 16
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57135,
+     "n_candidates": 43,
+     "objective": 569498.5976273984,
+     "gap": 0.006119328361298633,
+     "plan_seconds": 1.3144860719999087,
+     "activated": 7
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57193,
+     "n_candidates": 45,
+     "objective": 566264.0748811696,
+     "gap": 0.009462778945110419,
+     "plan_seconds": 1.9521361940001043,
+     "activated": 10
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57135,
+     "n_candidates": 43,
+     "objective": 569498.5976273984,
+     "gap": 0.006119328361298633,
+     "plan_seconds": 1.1521109489999617,
+     "activated": 7
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 1.3393441529998427,
+   "wall_seconds": 4.76194233800004
+  },
+  {
+   "seed": 2,
+   "hazard": "gulf_hurricane_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.37349397590361444,
+     "recall": 1.0,
+     "mae_days": 18.746987951807228,
+     "n_true": 31,
+     "n_pred": 83
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.8064516129032258,
+     "mae_days": 3.661290322580645,
+     "n_true": 31,
+     "n_pred": 25
+    },
+    "A1": {
+     "precision": 0.37349397590361444,
+     "recall": 1.0,
+     "mae_days": 17.204819277108435,
+     "n_true": 31,
+     "n_pred": 83
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.8064516129032258,
+     "mae_days": 3.661290322580645,
+     "n_true": 31,
+     "n_pred": 25
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.8686839077155796,
+     "unmet_units": 1272.6894928962079,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "Full": {
+     "fill_rate": 0.9197498680285726,
+     "unmet_units": 780.5189236022056,
+     "ttr95_days": 23.0,
+     "cost_k": 11.748988854794872,
+     "n_affected": 31
+    },
+    "A2": {
+     "fill_rate": 0.9190240930098185,
+     "unmet_units": 787.5138983754243,
+     "ttr95_days": 23.0,
+     "cost_k": 11.353687236296672,
+     "n_affected": 31
+    },
+    "A3": {
+     "fill_rate": 0.9197498680285726,
+     "unmet_units": 780.5189236022056,
+     "ttr95_days": 23.0,
+     "cost_k": 11.748988854794872,
+     "n_affected": 31
+    },
+    "B3": {
+     "fill_rate": 0.9387866067000327,
+     "unmet_units": 1868.342117653635,
+     "ttr95_days": 23.0,
+     "cost_k": 38.15878461968388,
+     "n_affected": 31
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 58409,
+     "n_candidates": 85,
+     "objective": 560935.9562813413,
+     "gap": 0.00846236822255985,
+     "plan_seconds": 1.3451724700000796,
+     "activated": 7
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 58409,
+     "n_candidates": 85,
+     "objective": 560859.8031354861,
+     "gap": 0.008832274475235678,
+     "plan_seconds": 1.557625637000001,
+     "activated": 7
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 58409,
+     "n_candidates": 85,
+     "objective": 560935.9562813413,
+     "gap": 0.00846236822255985,
+     "plan_seconds": 1.3524467550000736,
+     "activated": 7
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 1.3609768840000243,
+   "wall_seconds": 4.565904086000046
+  },
+  {
+   "seed": 2,
+   "hazard": "statewide_winter_storm",
+   "prediction": {
+    "B1": {
+     "precision": 0.3229166666666667,
+     "recall": 1.0,
+     "mae_days": 21.09375,
+     "n_true": 31,
+     "n_pred": 96
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.45161290322580644,
+     "mae_days": 10.32258064516129,
+     "n_true": 31,
+     "n_pred": 14
+    },
+    "A1": {
+     "precision": 0.3229166666666667,
+     "recall": 1.0,
+     "mae_days": 19.854166666666668,
+     "n_true": 31,
+     "n_pred": 96
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.45161290322580644,
+     "mae_days": 10.32258064516129,
+     "n_true": 31,
+     "n_pred": 14
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.9594376249849669,
+     "unmet_units": 378.9508337957516,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "Full": {
+     "fill_rate": 0.9664177826047468,
+     "unmet_units": 315.08897547554875,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "A2": {
+     "fill_rate": 0.9664177826047468,
+     "unmet_units": 315.08897547554875,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "A3": {
+     "fill_rate": 0.9664177826047468,
+     "unmet_units": 315.08897547554875,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "B3": {
+     "fill_rate": 0.9733013496772324,
+     "unmet_units": 612.2883110034609,
+     "ttr95_days": 13.0,
+     "cost_k": 14.367641348332247,
+     "n_affected": 31
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56727,
+     "n_candidates": 27,
+     "objective": 520340.7428776406,
+     "gap": 0.0,
+     "plan_seconds": 0.8600348209999993,
+     "activated": 0
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56727,
+     "n_candidates": 27,
+     "objective": 520340.7428776406,
+     "gap": 0.0,
+     "plan_seconds": 0.8591105030000108,
+     "activated": 0
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56727,
+     "n_candidates": 27,
+     "objective": 520340.7428776406,
+     "gap": 0.0,
+     "plan_seconds": 0.7778677029999699,
+     "activated": 0
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.8814360370000713,
+   "wall_seconds": 2.852652035999995
+  },
+  {
+   "seed": 2,
+   "hazard": "river_corridor_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.7894736842105263,
+     "recall": 0.6818181818181818,
+     "mae_days": 11.846153846153847,
+     "n_true": 22,
+     "n_pred": 19
+    },
+    "B2": {
+     "precision": 0.9230769230769231,
+     "recall": 0.5454545454545454,
+     "mae_days": 12.304347826086957,
+     "n_true": 22,
+     "n_pred": 13
+    },
+    "A1": {
+     "precision": 0.5789473684210527,
+     "recall": 1.0,
+     "mae_days": 11.197368421052632,
+     "n_true": 22,
+     "n_pred": 38
+    },
+    "Full": {
+     "precision": 0.8695652173913043,
+     "recall": 0.9090909090909091,
+     "mae_days": 5.62,
+     "n_true": 22,
+     "n_pred": 23
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.7494487890417703,
+     "unmet_units": 1764.4955885947084,
+     "ttr95_days": 17.0,
+     "cost_k": 0.0,
+     "n_affected": 22
+    },
+    "Full": {
+     "fill_rate": 0.8699249159076446,
+     "unmet_units": 947.6771981345652,
+     "ttr95_days": 16.0,
+     "cost_k": 25.833374113974802,
+     "n_affected": 22
+    },
+    "A2": {
+     "fill_rate": 0.8442211187288086,
+     "unmet_units": 1102.1450063960915,
+     "ttr95_days": 17.0,
+     "cost_k": 19.08239489438738,
+     "n_affected": 22
+    },
+    "A3": {
+     "fill_rate": 0.8699249159076446,
+     "unmet_units": 947.6771981345652,
+     "ttr95_days": 16.0,
+     "cost_k": 25.833374113974802,
+     "n_affected": 22
+    },
+    "B3": {
+     "fill_rate": 0.8163464552713298,
+     "unmet_units": 1485.1694510640361,
+     "ttr95_days": 17.0,
+     "cost_k": 39.38465884908897,
+     "n_affected": 22
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57307,
+     "n_candidates": 47,
+     "objective": 613097.7740286441,
+     "gap": 0.005757331400455625,
+     "plan_seconds": 1.190021895999962,
+     "activated": 16
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57684,
+     "n_candidates": 60,
+     "objective": 606461.499573932,
+     "gap": 0.0074486862479785825,
+     "plan_seconds": 19.676667449999968,
+     "activated": 14
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57307,
+     "n_candidates": 47,
+     "objective": 613097.7740286441,
+     "gap": 0.005757331400455625,
+     "plan_seconds": 1.3476054079999358,
+     "activated": 16
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 1.2095002080000086,
+   "wall_seconds": 22.48741909699993
+  },
+  {
+   "seed": 3,
+   "hazard": "gulf_hurricane_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "mae_days": 16.347826086956523,
+     "n_true": 46,
+     "n_pred": 92
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.7608695652173914,
+     "mae_days": 4.815217391304348,
+     "n_true": 46,
+     "n_pred": 35
+    },
+    "A1": {
+     "precision": 0.5,
+     "recall": 1.0,
+     "mae_days": 14.869565217391305,
+     "n_true": 46,
+     "n_pred": 92
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.7608695652173914,
+     "mae_days": 4.815217391304348,
+     "n_true": 46,
+     "n_pred": 35
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.8674680879927199,
+     "unmet_units": 2018.2392441368315,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 46
+    },
+    "Full": {
+     "fill_rate": 0.9222970108432093,
+     "unmet_units": 1221.4961831233802,
+     "ttr95_days": 23.0,
+     "cost_k": 14.609437602131779,
+     "n_affected": 46
+    },
+    "A2": {
+     "fill_rate": 0.9212649408357513,
+     "unmet_units": 1246.8912156082513,
+     "ttr95_days": 23.0,
+     "cost_k": 14.475813074337102,
+     "n_affected": 46
+    },
+    "A3": {
+     "fill_rate": 0.9222970108432093,
+     "unmet_units": 1221.4961831233802,
+     "ttr95_days": 23.0,
+     "cost_k": 14.609437602131779,
+     "n_affected": 46
+    },
+    "B3": {
+     "fill_rate": 0.9228008537580854,
+     "unmet_units": 2471.3914885462736,
+     "ttr95_days": 23.0,
+     "cost_k": 38.50273213540936,
+     "n_affected": 46
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 59285,
+     "n_candidates": 121,
+     "objective": 577092.7574879709,
+     "gap": 0.007875360555499108,
+     "plan_seconds": 6.308112659000017,
+     "activated": 10
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 59604,
+     "n_candidates": 132,
+     "objective": 575580.7245373866,
+     "gap": 0.005549949428832164,
+     "plan_seconds": 6.935584251000023,
+     "activated": 9
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 59285,
+     "n_candidates": 121,
+     "objective": 577092.7574879709,
+     "gap": 0.007875360555499108,
+     "plan_seconds": 5.861371793999979,
+     "activated": 10
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 6.327190395000002,
+   "wall_seconds": 19.416526732999955
+  },
+  {
+   "seed": 3,
+   "hazard": "statewide_winter_storm",
+   "prediction": {
+    "B1": {
+     "precision": 0.3229166666666667,
+     "recall": 1.0,
+     "mae_days": 20.177083333333332,
+     "n_true": 31,
+     "n_pred": 96
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.2903225806451613,
+     "mae_days": 13.080645161290322,
+     "n_true": 31,
+     "n_pred": 9
+    },
+    "A1": {
+     "precision": 0.3229166666666667,
+     "recall": 1.0,
+     "mae_days": 19.020833333333332,
+     "n_true": 31,
+     "n_pred": 96
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.2903225806451613,
+     "mae_days": 13.080645161290322,
+     "n_true": 31,
+     "n_pred": 9
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.9476102990199594,
+     "unmet_units": 471.6281928874804,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "Full": {
+     "fill_rate": 0.9535880979324945,
+     "unmet_units": 418.59037421269943,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "A2": {
+     "fill_rate": 0.9547914139750469,
+     "unmet_units": 407.91399332281884,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "A3": {
+     "fill_rate": 0.9535880979324945,
+     "unmet_units": 418.59037421269943,
+     "ttr95_days": 23.0,
+     "cost_k": 0.0,
+     "n_affected": 31
+    },
+    "B3": {
+     "fill_rate": 0.9731096007404503,
+     "unmet_units": 878.650647378074,
+     "ttr95_days": 15.0,
+     "cost_k": 16.16729026909003,
+     "n_affected": 31
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57168,
+     "n_candidates": 48,
+     "objective": 523401.71810288273,
+     "gap": 0.0,
+     "plan_seconds": 0.7671769730000051,
+     "activated": 0
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57400,
+     "n_candidates": 56,
+     "objective": 523401.7181028827,
+     "gap": 0.0,
+     "plan_seconds": 0.7776935599999888,
+     "activated": 0
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57168,
+     "n_candidates": 48,
+     "objective": 523401.71810288273,
+     "gap": 0.0,
+     "plan_seconds": 0.8695528030000332,
+     "activated": 0
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.7815498690001732,
+   "wall_seconds": 2.6844497459999275
+  },
+  {
+   "seed": 3,
+   "hazard": "river_corridor_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.375,
+     "recall": 0.75,
+     "mae_days": 17.77777777777778,
+     "n_true": 8,
+     "n_pred": 16
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.5,
+     "mae_days": 8.8125,
+     "n_true": 8,
+     "n_pred": 4
+    },
+    "A1": {
+     "precision": 0.4,
+     "recall": 1.0,
+     "mae_days": 15.175,
+     "n_true": 8,
+     "n_pred": 20
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "mae_days": 0.9375,
+     "n_true": 8,
+     "n_pred": 8
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.7274633661198954,
+     "unmet_units": 693.3704101176905,
+     "ttr95_days": 20.0,
+     "cost_k": 0.0,
+     "n_affected": 8
+    },
+    "Full": {
+     "fill_rate": 0.8067596383880378,
+     "unmet_units": 501.9194478170021,
+     "ttr95_days": 20.0,
+     "cost_k": 4.7331985007026,
+     "n_affected": 8
+    },
+    "A2": {
+     "fill_rate": 0.80543937856079,
+     "unmet_units": 497.41068162672104,
+     "ttr95_days": 20.0,
+     "cost_k": 6.18763049078697,
+     "n_affected": 8
+    },
+    "A3": {
+     "fill_rate": 0.8067596383880378,
+     "unmet_units": 501.9194478170021,
+     "ttr95_days": 20.0,
+     "cost_k": 4.7331985007026,
+     "n_affected": 8
+    },
+    "B3": {
+     "fill_rate": 0.833090183907208,
+     "unmet_units": 478.98345725129167,
+     "ttr95_days": 17.0,
+     "cost_k": 14.836378732145889,
+     "n_affected": 8
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56472,
+     "n_candidates": 24,
+     "objective": 571269.6937161405,
+     "gap": 0.004999247831907891,
+     "plan_seconds": 0.8960561320000124,
+     "activated": 3
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56472,
+     "n_candidates": 24,
+     "objective": 571177.577744768,
+     "gap": 0.00559850453710216,
+     "plan_seconds": 0.8251642750000201,
+     "activated": 4
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56472,
+     "n_candidates": 24,
+     "objective": 571269.6937161405,
+     "gap": 0.004999247831907891,
+     "plan_seconds": 0.7747133840000515,
+     "activated": 3
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.9207037489999266,
+   "wall_seconds": 2.8092232249999824
+  },
+  {
+   "seed": 4,
+   "hazard": "gulf_hurricane_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.38596491228070173,
+     "recall": 1.0,
+     "mae_days": 18.771929824561404,
+     "n_true": 22,
+     "n_pred": 57
+    },
+    "B2": {
+     "precision": 0.9444444444444444,
+     "recall": 0.7727272727272727,
+     "mae_days": 4.543478260869565,
+     "n_true": 22,
+     "n_pred": 18
+    },
+    "A1": {
+     "precision": 0.38596491228070173,
+     "recall": 1.0,
+     "mae_days": 16.526315789473685,
+     "n_true": 22,
+     "n_pred": 57
+    },
+    "Full": {
+     "precision": 0.9444444444444444,
+     "recall": 0.7727272727272727,
+     "mae_days": 4.543478260869565,
+     "n_true": 22,
+     "n_pred": 18
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.8726263146438032,
+     "unmet_units": 921.9487683757839,
+     "ttr95_days": 19.0,
+     "cost_k": 0.0,
+     "n_affected": 22
+    },
+    "Full": {
+     "fill_rate": 0.904704580526483,
+     "unmet_units": 692.1648216812766,
+     "ttr95_days": 19.0,
+     "cost_k": 10.887266196955244,
+     "n_affected": 22
+    },
+    "A2": {
+     "fill_rate": 0.911080981781939,
+     "unmet_units": 647.2374344277965,
+     "ttr95_days": 19.0,
+     "cost_k": 10.153390483713734,
+     "n_affected": 22
+    },
+    "A3": {
+     "fill_rate": 0.904704580526483,
+     "unmet_units": 692.1648216812766,
+     "ttr95_days": 19.0,
+     "cost_k": 10.887266196955244,
+     "n_affected": 22
+    },
+    "B3": {
+     "fill_rate": 0.957133245519618,
+     "unmet_units": 641.9605620951056,
+     "ttr95_days": 14.0,
+     "cost_k": 34.83325416700722,
+     "n_affected": 22
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57282,
+     "n_candidates": 50,
+     "objective": 587915.167569111,
+     "gap": 0.006857343445881546,
+     "plan_seconds": 0.8166789160000008,
+     "activated": 7
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57717,
+     "n_candidates": 65,
+     "objective": 583783.8531957818,
+     "gap": 0.009063267875954083,
+     "plan_seconds": 0.778717009999923,
+     "activated": 7
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57282,
+     "n_candidates": 50,
+     "objective": 587915.167569111,
+     "gap": 0.006857343445881546,
+     "plan_seconds": 0.8362500969999473,
+     "activated": 7
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.8357206259998975,
+   "wall_seconds": 2.7273144179999917
+  },
+  {
+   "seed": 4,
+   "hazard": "statewide_winter_storm",
+   "prediction": {
+    "B1": {
+     "precision": 0.43333333333333335,
+     "recall": 1.0,
+     "mae_days": 18.122222222222224,
+     "n_true": 39,
+     "n_pred": 90
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.15384615384615385,
+     "mae_days": 15.256410256410257,
+     "n_true": 39,
+     "n_pred": 6
+    },
+    "A1": {
+     "precision": 0.43333333333333335,
+     "recall": 1.0,
+     "mae_days": 16.377777777777776,
+     "n_true": 39,
+     "n_pred": 90
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.15384615384615385,
+     "mae_days": 15.256410256410257,
+     "n_true": 39,
+     "n_pred": 6
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.9559977281905747,
+     "unmet_units": 512.5957681619336,
+     "ttr95_days": 19.0,
+     "cost_k": 0.0,
+     "n_affected": 39
+    },
+    "Full": {
+     "fill_rate": 0.9672576312974017,
+     "unmet_units": 384.22481802409493,
+     "ttr95_days": 19.0,
+     "cost_k": 0.0,
+     "n_affected": 39
+    },
+    "A2": {
+     "fill_rate": 0.9671435204442362,
+     "unmet_units": 385.1720469615354,
+     "ttr95_days": 19.0,
+     "cost_k": 0.0,
+     "n_affected": 39
+    },
+    "A3": {
+     "fill_rate": 0.9672576312974017,
+     "unmet_units": 384.22481802409493,
+     "ttr95_days": 19.0,
+     "cost_k": 0.0,
+     "n_affected": 39
+    },
+    "B3": {
+     "fill_rate": 0.9658784563849949,
+     "unmet_units": 541.7289416601639,
+     "ttr95_days": 19.0,
+     "cost_k": 9.834054839207049,
+     "n_affected": 39
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56789,
+     "n_candidates": 33,
+     "objective": 541904.503449826,
+     "gap": 0.0,
+     "plan_seconds": 0.8551581599999736,
+     "activated": 0
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56789,
+     "n_candidates": 33,
+     "objective": 541904.503449826,
+     "gap": 0.0,
+     "plan_seconds": 0.7474450050000314,
+     "activated": 0
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 56789,
+     "n_candidates": 33,
+     "objective": 541904.503449826,
+     "gap": 0.0,
+     "plan_seconds": 0.890236970999922,
+     "activated": 0
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 0.8745390670000006,
+   "wall_seconds": 2.8678864299999987
+  },
+  {
+   "seed": 4,
+   "hazard": "river_corridor_flood",
+   "prediction": {
+    "B1": {
+     "precision": 0.44,
+     "recall": 0.5,
+     "mae_days": 17.86111111111111,
+     "n_true": 22,
+     "n_pred": 25
+    },
+    "B2": {
+     "precision": 1.0,
+     "recall": 0.5909090909090909,
+     "mae_days": 8.977272727272727,
+     "n_true": 22,
+     "n_pred": 13
+    },
+    "A1": {
+     "precision": 0.6,
+     "recall": 0.9545454545454546,
+     "mae_days": 12.069444444444445,
+     "n_true": 22,
+     "n_pred": 35
+    },
+    "Full": {
+     "precision": 1.0,
+     "recall": 0.8636363636363636,
+     "mae_days": 5.7727272727272725,
+     "n_true": 22,
+     "n_pred": 19
+    }
+   },
+   "resolution": {
+    "NoAction": {
+     "fill_rate": 0.708090816232639,
+     "unmet_units": 1821.157698329922,
+     "ttr95_days": 24.0,
+     "cost_k": 0.0,
+     "n_affected": 22
+    },
+    "Full": {
+     "fill_rate": 0.8681265654803264,
+     "unmet_units": 822.7639037695599,
+     "ttr95_days": 15.0,
+     "cost_k": 19.344935658577754,
+     "n_affected": 22
+    },
+    "A2": {
+     "fill_rate": 0.8578940584604781,
+     "unmet_units": 888.4803834352954,
+     "ttr95_days": 22.0,
+     "cost_k": 19.285959388295073,
+     "n_affected": 22
+    },
+    "A3": {
+     "fill_rate": 0.8681265654803264,
+     "unmet_units": 822.7639037695599,
+     "ttr95_days": 15.0,
+     "cost_k": 19.344935658577754,
+     "n_affected": 22
+    },
+    "B3": {
+     "fill_rate": 0.8747156134490578,
+     "unmet_units": 1376.019504311768,
+     "ttr95_days": 23.0,
+     "cost_k": 33.91445983085289,
+     "n_affected": 22
+    }
+   },
+   "plan_info": {
+    "Full": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57340,
+     "n_candidates": 52,
+     "objective": 595098.4311045205,
+     "gap": 0.00593467591942233,
+     "plan_seconds": 49.25339020900003,
+     "activated": 11
+    },
+    "A2": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57920,
+     "n_candidates": 72,
+     "objective": 592573.2545317921,
+     "gap": 0.0058880029533924716,
+     "plan_seconds": 26.876371640000002,
+     "activated": 11
+    },
+    "A3": {
+     "status": 0,
+     "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+     "n_vars": 57340,
+     "n_candidates": 52,
+     "objective": 595098.4311045205,
+     "gap": 0.00593467591942233,
+     "plan_seconds": 45.20658312699993,
+     "activated": 11
+    }
+   },
+   "stci_top_changed_lambda0": false,
+   "latency_seconds_full": 49.28200492199994,
+   "wall_seconds": 121.68744328799994
+  }
+ ]
+}

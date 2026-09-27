@@ -1,0 +1,38 @@
+\begin{table}[t]
+\caption{Stockout prediction versus realized outcome (mean (s.d.) over 15 runs)}
+\label{tab:pred}
+\centering
+\small\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & Prec.$^{\dagger}$ & Recall & MAE $\sigma_v$ (d)\\
+\midrule
+B1 Topology-only & 0.42 (0.11) & 0.93 (0.15) & 18.3 (2.2) \\
+B2 Node-only spatial & 0.98 (0.06) & 0.57 (0.23) & 8.3 (4.0) \\
+A1 No buffers & 0.41 (0.08) & 0.99 (0.03) & 16.4 (2.4) \\
+GeoRipple (full) & 0.97 (0.06) & 0.65 (0.26) & 6.9 (4.2) \\
+\bottomrule
+\end{tabular}}
+\vspace{2pt}
+\parbox{\linewidth}{\footnotesize $^{\dagger}$Averaged over runs with at least one predicted stockout; bracketed superscript gives that count when fewer than all runs.}
+\end{table}
+
+\begin{table}[t]
+\caption{Resolution quality under realized hazards (mean (s.d.) over 15 runs)}
+\label{tab:resolve}
+\centering
+\small\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Method & Fill rate & Unmet (u) & TTR$_{95}$ (d) & Cost (\$k)\\
+\midrule
+No action & 0.854 (0.091) & 1037 (545) & 20.4 (3.2) & 0.0 (0.0) \\
+B3 Greedy nearest & 0.919 (0.056) & 1109 (596) & 18.2 (4.5) & 27.2 (12.2) \\
+A2 No hazard routing & 0.910 (0.050) & 648 (281) & 19.6 (3.1) & 9.2 (8.1) \\
+A3 $\lambda=0$ & 0.910 (0.049) & 646 (259) & 18.9 (3.1) & 9.1 (8.8) \\
+GeoRipple (full) & 0.910 (0.049) & 646 (259) & 18.9 (3.1) & 9.1 (8.8) \\
+\bottomrule
+\end{tabular}}
+\end{table}
