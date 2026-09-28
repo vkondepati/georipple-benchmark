@@ -110,7 +110,9 @@ def run(seeds, T, K, time_limit, M):
                                                 router, K, time_limit)
             res["A3"] = resolution_metrics(net, r, affected, h, T, c)
             p_exp = np.mean([xn.max(1) > 0 for xn, _ in exps], 0)
-            cand, Se, Sc, y = greedy_nearest(net, p_full >= 0.5, p_exp, T)
+            cand, Se, Sc, y = greedy_nearest(
+                net, p_full >= 0.5, p_exp, T,
+                max_lanes=info["Full"]["activated"], priority=dar.mean(0))
             r, c = execute_truth(net, h, T, seed, cand, Se, Sc, y)
             res["B3"] = resolution_metrics(net, r, affected, h, T, c)
 

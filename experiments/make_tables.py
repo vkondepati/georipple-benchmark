@@ -9,7 +9,7 @@ from scipy.stats import t as student_t
 HERE = os.path.dirname(__file__)
 PRED_ROWS = [("B1", "B1 Topology-only"), ("B2", "B2 Node-only spatial"),
              ("A1", "A1 No buffers"), ("Full", "GeoRipple (full)")]
-RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Greedy nearest"),
+RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Budget-matched greedy"),
             ("A2", "A2 No hazard routing"), ("A3", r"A3 $\lambda=0$"),
             ("Full", "GeoRipple (full)")]
 

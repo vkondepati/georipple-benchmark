@@ -204,13 +204,18 @@ def execution_schedule(net, f_exist, f_cand, y, T):
     return S_exist, S_cand
 
 
-def greedy_nearest(net, stranded, p_exposed, T, r_lateral=600.0):
-    """B3: every predicted-stranded dealer gets a straight lane from its nearest
-    unexposed DC, run at full dealer demand from day 0; no hazard routing."""
+def greedy_nearest(net, stranded, p_exposed, T, r_lateral=600.0,
+                   max_lanes=None, priority=None):
+    """B3: add nearest-DC lanes in priority order, subject to an action budget."""
     parent = {int(d): int(s) for s, d in zip(net.src, net.dst) if net.kind[d] == DEALER}
     ok_dc = np.where((net.kind == DC) & (p_exposed < 0.5))[0]
     cand = Candidates()
-    for d in np.where(stranded)[0]:
+    dealers = np.where(stranded)[0]
+    if priority is not None:
+        dealers = dealers[np.argsort(-np.asarray(priority)[dealers])]
+    for d in dealers:
+        if max_lanes is not None and len(cand) >= max_lanes:
+            break
         pool = ok_dc[ok_dc != parent.get(int(d), -1)]
         near = _nearest(net, int(d), pool, 1, r_lateral)
         if near:

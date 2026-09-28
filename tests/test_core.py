@@ -9,7 +9,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from georipple.network import generate, Network, DEALER            # noqa: E402
 from georipple.hazards import Hazard, base_hazards, node_exposure, edge_exposure  # noqa: E402
 from georipple.routing import HazardRouter                         # noqa: E402
-from georipple.resolve import Candidates, execution_schedule, plan_milp  # noqa: E402
+from georipple.resolve import (Candidates, execution_schedule, greedy_nearest,  # noqa: E402
+                               plan_milp)
 from georipple.predict import stci                                 # noqa: E402
 from georipple.evaluate import execute_truth, resolution_metrics   # noqa: E402
 from georipple.simulate import (Lanes, SimResult, simulate, existing_lanes, baseline_schedule,  # noqa: E402
@@ -114,3 +115,11 @@ def test_ttr_is_censored_when_recovery_is_not_observed():
     metrics = resolution_metrics(net, r, affected, base_hazards()[0], T, 0.0)
     assert np.isnan(metrics["ttr95_days"])
     assert metrics["ttr95_recovered"] is False
+
+
+def test_greedy_baseline_respects_action_budget():
+    net = generate(0, n_dc=4, n_dealer=8)
+    stranded = np.zeros(net.n, bool); stranded[net.dealers] = True
+    cand, _, _, _ = greedy_nearest(net, stranded, np.zeros(net.n), T,
+                                   r_lateral=10_000.0, max_lanes=2)
+    assert len(cand) == 2
