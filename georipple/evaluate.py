@@ -62,10 +62,16 @@ def prediction_metrics(net, p, sig_hat, sigma_true, T, truth_mask):
     tp = (truth & pred).sum()
     precision = tp / pred.sum() if pred.sum() else np.nan
     recall = tp / truth.sum() if truth.sum() else np.nan
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else np.nan
+    brier = float(np.mean((p[dl] - truth) ** 2))
     union = truth | pred
     s_hat = np.where(pred, np.minimum(sig_hat[dl], T), T)
     mae = float(np.abs(s_hat[union] - np.minimum(sigma_true[dl][union], T)).mean()) if union.any() else np.nan
-    return {"precision": float(precision), "recall": float(recall), "mae_days": mae,
+    tp_mask = truth & pred
+    mae_tp = float(np.abs(sig_hat[dl][tp_mask] - sigma_true[dl][tp_mask]).mean()) \
+        if tp_mask.any() else np.nan
+    return {"precision": float(precision), "recall": float(recall), "f1": float(f1),
+            "brier": brier, "mae_days": mae, "mae_days_true_positive": mae_tp,
             "n_true": int(truth.sum()), "n_pred": int(pred.sum())}
 
 
