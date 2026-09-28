@@ -429,8 +429,8 @@
   }
  },
  "latency_seconds_full": {
-  "mean": 0.8198566556170893,
-  "max": 3.833862832048908
+  "mean": 0.8424301997215177,
+  "max": 4.082632916921284
  },
  "per_hazard": {
   "gulf_hurricane_flood": {
