@@ -1,0 +1,15 @@
+{
+ "seed": 0,
+ "hazard": "gulf_hurricane_flood",
+ "n_predicted": 29,
+ "n_exposed_lanes": 45,
+ "activated": {
+  "lateral": 16,
+  "alt_source": 0
+ },
+ "cost_k": 24.22297792286692,
+ "unmet_none": 1234.3450749085955,
+ "unmet_plan": 651.1019652003056,
+ "dealers_improved": 29,
+ "dealers_worse": 1
+}

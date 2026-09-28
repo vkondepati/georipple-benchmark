@@ -15,6 +15,7 @@ pip install -r requirements.txt
 make test      # 3 unit tests
 make bench     # 5 seeds x 3 hazards, about 2-5 minutes on one core
 make tables    # writes results/tables.tex and results/summary.json
+make figures   # writes paper/figures/fig_wavefront.* and fig_resolution.*
 ```
 
 `results/` already contains the outputs used in the paper
@@ -35,6 +36,8 @@ seeds reproduces them.
 | `georipple/evaluate.py` | Ground-truth execution and metrics |
 | `experiments/run_benchmark.py` | Runs all methods, writes `results/runs.json` |
 | `experiments/make_tables.py` | Aggregates runs, writes LaTeX tables |
+| `experiments/make_figures.py` | Renders the two map figures for one run |
+| `data/us-states.json` | State outlines for figures (PublicaMundi/MappingAPI, from U.S. Census boundaries) |
 | `paper/georipple_paper.tex` | Paper source |
 
 ## What the benchmark does and does not model
