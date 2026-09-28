@@ -4,10 +4,11 @@ Each lane e has a shipment schedule S[e, t]. Each day a node ships its
 scheduled quantities, prorated down when on-hand inventory or
 hazard-degraded node capacity is short, then clipped by hazard-degraded
 lane capacity (clipped quantity stays at the origin). All lanes into a node share
-its hazard-degraded receiving capacity, so opening extra lanes into a
-flooded area cannot bypass the hazard. Shipments arrive
-after tau_e (+ optional stochastic delay) days. Dealers serve demand from
-on-hand stock; the first day demand is not fully met is the stockout day.
+its hazard-degraded receiving capacity on arrival, so opening extra lanes
+into a flooded area cannot bypass the hazard. Excess arrivals remain in
+transit until receiving capacity becomes available. Shipments arrive after
+tau_e (+ optional stochastic delay) days. Dealers serve demand from on-hand
+stock; the first day demand is not fully met is the stockout day.
 """
 from dataclasses import dataclass
 import numpy as np
@@ -38,6 +39,20 @@ def initial_pipeline(net, T):
     return pipe
 
 
+def pipeline_receipts(net, x_node, pipe, T):
+    """Schedule exogenous pipeline receipts through arrival-day capacity."""
+    pending = np.zeros(net.n)
+    received = np.zeros((net.n, T))
+    residual = np.zeros((net.n, T))
+    for t in range(T):
+        incoming = pending + pipe[:, t]
+        cap = np.maximum(net.recv_cap * (1.0 - x_node[:, t]), 0.0)
+        received[:, t] = np.minimum(incoming, cap)
+        pending = incoming - received[:, t]
+        residual[:, t] = cap - received[:, t]
+    return received, residual
+
+
 def simulate(net, lanes, x_node, x_edge, S, T, pipe=None, delays=None, I0=None):
     n, E = net.n, len(lanes.src)
     I = (net.I0 if I0 is None else I0).astype(float).copy()
@@ -51,7 +66,11 @@ def simulate(net, lanes, x_node, x_edge, S, T, pipe=None, delays=None, I0=None):
     shipped = np.zeros((E, T))
     sigma = np.full(n, T)
     for t in range(T):
-        I += arr[:, t]
+        inbound = arr[:, t]
+        rcap = np.maximum(net.recv_cap * (1.0 - x_node[:, t]), 0.0)
+        received = np.minimum(inbound, rcap)
+        I += received
+        arr[:, t + 1] += inbound - received
         I[is_sup] += net.prod[is_sup] * (1.0 - x_node[is_sup, t])
         s = np.where(is_dl, np.minimum(I, net.demand), 0.0)
         I -= s
@@ -64,11 +83,6 @@ def simulate(net, lanes, x_node, x_edge, S, T, pipe=None, delays=None, I0=None):
         ship = S[:, t] * ratio[lanes.src]
         ship = np.minimum(ship, lanes.cap * (1.0 - x_edge[:, t]))
         ship = np.maximum(ship, 0.0)
-        # shared receiving capacity: all lanes into a hazard-hit node compete
-        inbound = np.bincount(lanes.dst, ship, n)
-        rcap = net.recv_cap * (1.0 - x_node[:, t])
-        rin = np.where(inbound > 1e-12, np.minimum(1.0, rcap / np.maximum(inbound, 1e-12)), 1.0)
-        ship = ship * rin[lanes.dst]
         I -= np.bincount(lanes.src, ship, n)
         due = t + lanes.tau + (0 if delays is None else delays[:, t])
         np.add.at(arr, (lanes.dst, due), ship)

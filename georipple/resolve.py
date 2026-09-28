@@ -6,6 +6,7 @@ from scipy.optimize import milp, LinearConstraint, Bounds
 from shapely.geometry import LineString
 
 from .network import SUP, DC, DEALER, ROAD_FACTOR, lane_tau
+from .simulate import pipeline_receipts
 
 UNIT_COST_PER_KM = 0.01     # $ per unit per road km
 FIXED_BASE = 1000.0         # $ fixed cost to open a lane
@@ -136,7 +137,8 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
         for t in range(T):
             rows.append(row(v, t)); cols.append(oU + dl_index[int(v)] * T + t); vals.append(-1.0)
     A_eq = sp.csr_matrix((vals, (rows, cols)), shape=(n * T, nvar))
-    b = pipe.copy()
+    pipe_received, recv_residual = pipeline_receipts(net, xn, pipe, T)
+    b = pipe_received.copy()
     is_sup = net.kind == SUP
     b[is_sup] += (net.prod[is_sup, None] * (1 - xn[is_sup]))
     b[dealers] -= net.demand[dealers, None]
@@ -153,11 +155,13 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
                 r2.append(nd_index[src[e]] * T + t); c2.append(oF + e * T + t); v2.append(1.0)
     A_cap = sp.csr_matrix((v2, (r2, c2)), shape=(len(nd) * T, nvar))
     ub_cap = (net.node_cap[nd, None] * (1 - xn[nd])).reshape(-1)
-    # shared node receiving capacity (by departure day)
-    r4 = [dst[e] * T + t for e in range(nE) for t in range(T)]
-    c4 = [oF + e * T + t for e in range(nE) for t in range(T)]
+    # shared node receiving capacity on the arrival day
+    arrivals = [(e, t, t + tau[e]) for e in range(nE) for t in range(T)
+                if t + tau[e] < T]
+    r4 = [dst[e] * T + at for e, t, at in arrivals]
+    c4 = [oF + e * T + t for e, t, at in arrivals]
     A_recv = sp.csr_matrix((np.ones(len(r4)), (r4, c4)), shape=(n * T, nvar))
-    ub_recv = (net.recv_cap[:, None] * (1 - xn)).reshape(-1)
+    ub_recv = recv_residual.reshape(-1)
     cons = [LinearConstraint(A_eq, b_eq, b_eq), LinearConstraint(A_cap, -np.inf, ub_cap),
             LinearConstraint(A_recv, -np.inf, ub_recv)]
 
@@ -194,10 +198,8 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
 
 
 def execution_schedule(net, f_exist, f_cand, y, T):
-    """Plan execution: keep baseline shipments, add planned increases, and
-    run activated recovery lanes at their planned flows."""
-    base = np.repeat(net.base_f[:, None], T, axis=1)
-    S_exist = np.maximum(base, f_exist)
+    """Execute the absolute lane flows optimized by the MILP."""
+    S_exist = f_exist
     S_cand = f_cand * y[:, None] if len(y) else np.zeros((0, T))
     return S_exist, S_cand
 
