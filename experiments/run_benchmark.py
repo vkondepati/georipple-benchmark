@@ -4,8 +4,11 @@ Usage:
     python experiments/run_benchmark.py --seeds 5 --horizon 28
 """
 import argparse
+from importlib.metadata import version
 import json
 import os
+import platform
+import subprocess
 import sys
 import time
 
@@ -26,6 +29,17 @@ from georipple.evaluate import (execute_truth, prediction_metrics,     # noqa: E
 
 
 PLAN_QUANTILE = 0.75
+PACKAGES = ("numpy", "scipy", "shapely", "networkx")
+
+
+def provenance():
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True,
+                            text=True, check=False).stdout.strip() or None
+    dirty = bool(subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                                capture_output=True, text=True, check=False).stdout.strip())
+    return {"python": platform.python_version(), "platform": platform.platform(),
+            "packages": {name: version(name) for name in PACKAGES},
+            "git_commit": commit, "git_dirty": dirty}
 
 
 def plan_and_execute(net, ens, exps, p, score, h, T, seed, router, K, time_limit,
@@ -125,8 +139,10 @@ def main():
     a = ap.parse_args()
     runs = run(a.seeds, a.horizon, a.top_k, a.time_limit, a.members)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
+    config = {k: v for k, v in vars(a).items() if k != "out"}
     with open(a.out, "w") as f:
-        json.dump({"config": vars(a), "runs": runs}, f, indent=1, default=float)
+        json.dump({"config": config, "provenance": provenance(), "runs": runs},
+                  f, indent=1, default=float)
     print("wrote", a.out)
 
 
