@@ -9,6 +9,7 @@ from georipple.network import generate, Network, DEALER            # noqa: E402
 from georipple.hazards import Hazard, base_hazards, node_exposure, edge_exposure  # noqa: E402
 from georipple.routing import HazardRouter                         # noqa: E402
 from georipple.resolve import Candidates, execution_schedule, plan_milp  # noqa: E402
+from georipple.predict import stci                                 # noqa: E402
 from georipple.simulate import (Lanes, simulate, existing_lanes, baseline_schedule,  # noqa: E402
                                 initial_pipeline)
 
@@ -77,3 +78,16 @@ def test_milp_schedule_is_executed_without_postprocessing():
     r = simulate(net, existing_lanes(net), xn, xe, scheduled_existing, T,
                  pipe=initial_pipeline(net, T))
     assert np.allclose(r.shipped, fe, atol=1e-7)
+
+
+def test_stci_attributes_last_mile_exposure_to_parent_facility():
+    net = Network(
+        xy=np.array([[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]]),
+        kind=np.array([0, 1, DEALER]), demand=np.array([0.0, 0.0, 1.0]),
+        prod=np.zeros(3), node_cap=np.ones(3), recv_cap=np.ones(3), I0=np.ones(3),
+        src=np.array([0, 1]), dst=np.array([1, 2]), km=np.ones(2),
+        tau=np.ones(2, int), cap=np.ones(2), base_f=np.ones(2))
+    xn = np.zeros((3, 2)); xe = np.zeros((2, 2)); xe[1] = 1.0
+    dar = np.array([[0.0, 0.0, 2.0]])
+    score = stci(net, [(xn, xe)], dar)
+    assert score[1] > 0.0
