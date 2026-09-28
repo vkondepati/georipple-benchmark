@@ -5,8 +5,8 @@ shaded by predicted stockout day.
 Resolution figure: activated recovery lanes and each dealer's change in
 fill rate under the plan versus no action (ground-truth execution).
 
-State outlines: data/us-states.json (PublicaMundi/MappingAPI, derived from
-U.S. Census boundaries).
+State outlines: data/us-states.json (U.S. Census Bureau cartographic
+boundaries, 2022 vintage, 1:20,000,000 scale).
 
 Usage: python experiments/make_figures.py --seed 0 --hazard 0
 """
@@ -26,7 +26,7 @@ HERE = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, HERE)
 
-from run_benchmark import PLAN_QUANTILE
+from run_benchmark import PLAN_QUANTILE, nonnegative_int, positive_int
 
 from georipple.evaluate import execute_truth
 from georipple.geo import project
@@ -46,6 +46,7 @@ from georipple.routing import HazardRouter
 from georipple.simulate import initial_pipeline
 
 plt.rcParams.update({"font.family": "serif", "font.size": 8})
+DEALER_CHANGE_THRESHOLD = 0.005
 
 
 def draw_states(ax):
@@ -84,13 +85,14 @@ def facilities(ax, net):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--hazard", type=int, default=0)
-    ap.add_argument("--horizon", type=int, default=28)
+    hazards = base_hazards()
+    ap.add_argument("--seed", type=nonnegative_int, default=0)
+    ap.add_argument("--hazard", type=int, choices=range(len(hazards)), default=0)
+    ap.add_argument("--horizon", type=positive_int, default=28)
     ap.add_argument("--outdir", default=os.path.join(HERE, "..", "paper", "figures"))
     a = ap.parse_args()
     T, seed = a.horizon, a.seed
-    h = base_hazards()[a.hazard]
+    h = hazards[a.hazard]
     net = generate(seed)
     ens = forecast_ensemble(h, np.random.default_rng([seed, a.hazard]), M=8)
     exps = ensemble_exposures(net, ens, T)
@@ -125,7 +127,9 @@ def main():
         loc="lower right", fontsize=5.5, framealpha=0.9)
     fig.tight_layout(pad=0.2)
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(a.outdir, f"fig_wavefront.{ext}"), dpi=300)
+        path = os.path.join(a.outdir, f"fig_wavefront.{ext}")
+        fig.savefig(path + ".tmp", dpi=300, format=ext)
+        os.replace(path + ".tmp", path)
     plt.close(fig)
 
     # ---------- plan (same settings as the benchmark's full method) ----------
@@ -164,7 +168,9 @@ def main():
               loc="lower right", fontsize=5.5, framealpha=0.9)
     fig.tight_layout(pad=0.2)
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(a.outdir, f"fig_resolution.{ext}"), dpi=300)
+        path = os.path.join(a.outdir, f"fig_resolution.{ext}")
+        fig.savefig(path + ".tmp", dpi=300, format=ext)
+        os.replace(path + ".tmp", path)
     plt.close(fig)
 
     stats = {"seed": seed, "hazard": h.name, "n_predicted": len(pred),
@@ -173,9 +179,13 @@ def main():
                            for k in colors},
              "cost_k": cost / 1000, "unmet_none": float((net.demand[dl, None] - r_none.served[dl]).clip(0).sum()),
              "unmet_plan": float((net.demand[dl, None] - r_plan.served[dl]).clip(0).sum()),
-             "dealers_improved": int((gain > 0.005).sum()), "dealers_worse": int((gain < -0.005).sum())}
-    with open(os.path.join(a.outdir, "figure_stats.json"), "w") as f:
-        json.dump(stats, f, indent=1)
+             "dealer_change_threshold_pp": 100 * DEALER_CHANGE_THRESHOLD,
+             "dealers_improved": int((gain > DEALER_CHANGE_THRESHOLD).sum()),
+             "dealers_worse": int((gain < -DEALER_CHANGE_THRESHOLD).sum())}
+    stats_path = os.path.join(a.outdir, "figure_stats.json")
+    with open(stats_path + ".tmp", "w") as f:
+        json.dump(stats, f, indent=1, allow_nan=False)
+    os.replace(stats_path + ".tmp", stats_path)
     print(json.dumps(stats, indent=1))
 
 

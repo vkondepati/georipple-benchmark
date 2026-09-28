@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
 
-from make_tables import cell, clustered_stats, finite_mean
+from make_tables import cell, clustered_stats, finite_mean, load_runs
 
 
 def test_clustered_stats_uses_seed_as_independent_unit():
@@ -35,3 +35,10 @@ def test_percentage_cells_can_be_escaped_for_latex():
 def test_finite_mean_ignores_missing_values():
     assert finite_mean([None, 1.0, 3.0]) == 2.0
     assert finite_mean([None]) is None
+
+
+def test_load_runs_rejects_empty_artifact(tmp_path):
+    path = tmp_path / "runs.json"
+    path.write_text('{"runs": []}')
+    with pytest.raises(ValueError, match="non-empty 'runs' list"):
+        load_runs(path)

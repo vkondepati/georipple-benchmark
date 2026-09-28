@@ -430,7 +430,13 @@
  },
  "latency_seconds_full": {
   "mean": 0.8424301997215177,
-  "max": 4.082632916921284
+  "max": 4.082632916921284,
+  "n_plans": 15
+ },
+ "interval_method": {
+  "description": "descriptive t interval over network-seed means",
+  "bounded_metrics": "intersected with the metric's [0, 1] parameter space",
+  "hazards": "fixed strata"
  },
  "per_hazard": {
   "gulf_hurricane_flood": {

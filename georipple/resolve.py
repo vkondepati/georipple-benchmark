@@ -9,10 +9,11 @@ from shapely.geometry import LineString
 from .network import DC, DEALER, ROAD_FACTOR, SUP, lane_tau
 from .simulate import baseline_schedule, existing_lanes, simulate
 
-UNIT_COST_PER_KM = 0.01     # $ per unit per road km
-FIXED_BASE = 1000.0         # $ fixed cost to open a lane
-FIXED_PER_KM = 1.0          # $ per road km, fixed part
-SHORTAGE_PENALTY = 100.0    # $ per unit of unmet demand
+# Illustrative synthetic cost units (CU); these are not calibrated dollars.
+UNIT_COST_PER_KM = 0.01     # CU per unit per road km
+FIXED_BASE = 1000.0         # CU fixed cost to open a lane
+FIXED_PER_KM = 1.0          # CU per road km, fixed part
+SHORTAGE_PENALTY = 100.0    # CU per unit of unmet demand
 
 
 @dataclass
@@ -101,7 +102,7 @@ def generate_candidates(net, stranded, score, p_exposed, router=None, K=10,
 
 
 def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
-    """Solve the time-expanded MILP (paper Eqs. 5-10) on expected exposures.
+    """Solve the time-expanded MILP (paper Eqs. 5-10) on planning exposures.
 
     Returns (flows for existing lanes (E,T), flows for candidates (C,T), y (C,), info).
     """

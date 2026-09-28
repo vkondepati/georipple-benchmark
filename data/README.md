@@ -1,13 +1,15 @@
 # Map boundary data
 
 `us-states.json` is used only as a background layer in the static figures. It
-was obtained from PublicaMundi's MappingAPI repository:
+is the U.S. Census Bureau's 2022 state cartographic boundary GeoJSON at
+1:20,000,000 scale, distributed through the Census CitySDK data service:
 
-<https://github.com/PublicaMundi/MappingAPI/blob/master/data/geojson/us-states.json>
+<https://ddbc5tjh37x38.cloudfront.net/20m/2022/state.json>
 
-The upstream file identifies U.S. state boundaries but does not include an
-embedded license or provenance statement. U.S. Census Bureau geographic data
-are generally public domain, but this repository does not assert that the
-upstream transformation or added density attributes have a particular license.
-Only the geometry and state name are read here. Replace this file with a map
-source appropriate to your intended redistribution requirements if necessary.
+The service is maintained by the U.S. Census Bureau's CitySDK project and
+documents these files as translations of Census cartographic boundaries. U.S.
+government works are public domain in the United States. Only geometry and the
+state name are read by the figure generator.
+
+- CitySDK source and GeoJSON documentation: <https://github.com/uscensusbureau/citysdk>
+- Census cartographic boundary documentation: <https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html>

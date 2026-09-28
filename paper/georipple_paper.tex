@@ -55,8 +55,8 @@ networks, three fixed hazard scenarios, and three execution-noise
 replicates, GeoRipple attains 0.96 precision, 0.65 recall, and a 7.9-day
 stockout-timing mean absolute error. Its plans reduce mean total unmet
 demand from 1{,}027 to 826 units (paired difference $-202$; seed-clustered
-95\% confidence interval $[-357,-46]$) at a mean recovery cost of
-\$17.7k. The effect is not uniform across hazards, and the small number of
+descriptive 95\% t interval $[-357,-46]$) at a mean recovery cost of
+17.7k synthetic cost units (CU). The effect is not uniform across hazards, and the small number of
 independent network seeds makes these results preliminary.
 \end{abstract}
 
@@ -201,7 +201,8 @@ probabilities $\pi_m$.
 
 \textbf{Objective.} Given $G$, $\mathcal{H}$, and horizon $T$, (a)
 predict for every demand point the stockout time
-$\sigma_v\in\{0,\dots,T-1\}\cup\{\infty\}$ and the demand-at-risk
+$\sigma_v\in\{0,\dots,T-1\}\cup\{\infty\}$, its horizon-censored value
+$\sigma_v^{(T)}=\min(\sigma_v,T)$, and the demand-at-risk
 $\mathrm{DaR}_v$; (b) rank facilities by urgency; and (c) choose a set of
 mitigation actions that minimizes unmet demand plus mitigation cost,
 subject to the hazard.
@@ -302,7 +303,7 @@ accumulates unmet demand over the horizon:
 where $q_v(t)$ is the quantity actually served. For upstream nodes,
 $\mathrm{DaR}^{\downarrow}_v$ denotes the total DaR of demand points
 whose baseline supply passes through $v$. Under a hazard ensemble we
-report expectations $\mathbb{E}[\sigma_v]$ and $\mathbb{E}[\mathrm{DaR}_v]$
+report expectations $\mathbb{E}[\sigma_v^{(T)}]$ and $\mathbb{E}[\mathrm{DaR}_v]$
 over scenarios weighted by $\pi_m$, and render the probability
 $\Pr[\sigma_v\le t]$ as the wavefront's opacity. Each simulation costs
 $O(T\,|E|)$. The reference implementation evaluates scenarios
@@ -370,10 +371,13 @@ For dealers downstream of the top-$K$ STCI facilities, a spatial
 $k$-nearest-neighbor query selects origins within a type-specific radius.
 Each pair is routed around the buffered union of forecast polygons with a
 visibility graph and is discarded when no route exists or transit time
-exceeds $\tau_{\max}$. Production use would additionally require product
+exceeds $\tau_{\max}$. When the destination itself lies inside the union,
+the route must enter the hazard; the benchmark retains the direct geometry
+and lets its modeled exposure reduce capacity. Production use would additionally require product
 compatibility, qualification, contracts, and road-network feasibility;
 these constraints are not represented in the synthetic data. The MILP
-may also reallocate flow among existing lanes. Expediting and creation of
+may add flow on existing lanes above a feasible baseline but cannot reduce
+an existing lane below that baseline. Expediting and creation of
 new multihop routes are outside the benchmark.
 
 \textbf{Optimization.} On the time-expanded network over $E\cup E_c$, let
@@ -389,22 +393,23 @@ activation of candidate lane $e\in E_c$ with fixed cost $F_e$. We solve
    + b_v^t - d_v^t + u_v^t \quad \forall v,t \label{eq:bal}\\
 & Q_v^t=Q_v^{t-1}+p_v^t+\!\!\sum_{e=(w,v)}\!f_e^{t-\tau_e}-r_v^t
   \quad \forall v,t \label{eq:queue}\\
-& f_e^t \le \tilde\kappa_e(t) \quad \forall e\in E,\ \forall t \label{eq:cap}\\
+& f_e^t \le \tilde\kappa_e(t) \quad \forall e\in E\cup E_c,\ \forall t \label{eq:cap}\\
 & f_e^t \le \kappa_e\, y_e \quad \forall e\in E_c,\ \forall t \label{eq:act}\\
 & \textstyle\sum_{e=(v,w)} f_e^t \le \tilde\kappa_v(t) \quad \forall v,\ \forall t
   \label{eq:nodecap}\\
 & r_v^t \le \kappa^{\mathrm{in}}_v\,(1-x_v(t)) \quad \forall v,t
   \label{eq:recvcap}
 \end{align}
-where $p_v^t$ is pre-horizon pipeline supply arriving at $t$,
+where $I_v^{-1}=I_v(0)$, $Q_v^{-1}=0$, flows with $t-\tau_e<0$ are zero,
+$p_v^t$ is pre-horizon pipeline supply arriving at $t$,
 $b_v^t=b_v(1-x_v(t))$ is production for $v\in V_S$ (zero otherwise),
 $d_v^t=u_v^t=0$ for $v\notin V_R$, and $\rho_v$ is a shortage penalty.
 Constraint
-\eqref{eq:cap} enforces hazard-degraded capacity on existing lanes, and
-\eqref{eq:act} opens candidate lanes only if activated. Under an
-ensemble, we solve a two-stage stochastic variant in which $y_e$ is
-chosen here-and-now and flows are scenario-dependent. For interactive
-speed, our prototype instead solves a single risk-averse problem in which
+\eqref{eq:cap} enforces hazard-degraded capacity on existing and candidate
+lanes, and \eqref{eq:act} opens candidate lanes only if activated. A full
+two-stage stochastic variant could choose $y_e$ here-and-now and make flows
+scenario-dependent. For interactive speed, the prototype instead solves a
+single risk-averse problem in which
 each exposure is set to its upper quartile across forecast members;
 averaging exposures would understate a hazard that is severe in some
 members and absent in others. Existing-lane flows are lower-bounded by
@@ -481,7 +486,8 @@ predicted stockout day; gray dealers are not at risk.}
 lateral-transshipment lanes activated by the MILP; dealers are shaded by
 their change in fill rate versus no action under the realized footprint
 (blue outline). The plan reduced unmet demand from 1{,}234 to 1{,}185
-units at a cost of \$27.2k; 14 dealers improved and 21 worsened. The
+units at a cost of 27.2k CU; 14 dealers improved and 21 worsened by at
+least 0.5 percentage points. The
 redistribution of benefit is visible rather than hidden by the aggregate.}
 \label{fig:resolution}
 \end{figure}
@@ -515,14 +521,14 @@ transit delays (mean 0.3 days per shipment). A stockout counts as
 no-hazard execution with the same delay draw. For each of five
 independently generated network seeds and three fixed hazards, we plan
 once and evaluate three delay draws, giving 45 evaluation records.
-Statistical intervals cluster these records by the five network seeds;
+Descriptive t intervals cluster these records by the five network seeds;
 hazards are fixed strata, not sampled events.
 
 \subsection{Baselines, Ablations, and Metrics}
 We compare against (B1) \emph{topology-only}, which marks every dealer
 downstream of a facility inside the forecast footprint as stocking out at
 onset; (B2) \emph{node-only spatial}, which is GeoRipple without lane
-exposure; and (B3) \emph{budget-matched greedy nearest-facility}
+exposure; and (B3) \emph{action-count-matched greedy nearest-facility}
 recovery, which adds straight lanes from unexposed distribution centers
 in predicted-DaR order until it reaches the number of lanes activated by
 the full plan. It ships dealer demand from day 0 without hazard-aware
@@ -531,16 +537,16 @@ routing. Ablations remove inventory buffers
 straight and assumed clear when planning (A2), and the structural term
 of \eqref{eq:stci} by setting $\lambda=0$ (A3). All planners use $K=10$,
 $k=3$ candidates per target, lateral radius 600\,km, sourcing radius
-1{,}500\,km, $\tau_{\max}=4$ days, and a shortage penalty of \$100/unit.
+1{,}500\,km, $\tau_{\max}=4$ days, and an illustrative shortage penalty
+of 100 CU/unit. All monetary coefficients are synthetic and uncalibrated.
 The MILP is solved with HiGHS through SciPy with a 1\% optimality gap;
 every instance returned a solution within that gap. The benchmark implements lateral transshipment
-and alternate sourcing as candidate lanes; shifting flow between existing
-lanes, which corresponds to rerouting in this network, happens inside the
-MILP. Expediting is not evaluated.
+and alternate sourcing as candidate lanes; the MILP may increase flow on
+existing lanes above their feasible baseline but may not suppress baseline
+service. Expediting is not evaluated.
 
 Prediction is scored by precision, recall, Brier score, and the mean absolute error of
-$\sigma_v$ over the union of predicted and actual stockouts, with
-non-stockouts set to $T$. Fill rate and TTR$_{95}$ are computed over the
+$\sigma_v^{(T)}$ over the union of predicted and actual stockouts. Fill rate and TTR$_{95}$ are computed over the
 dealers affected under no action. TTR$_{95}$ is the number of days from
 onset until their aggregate daily fill rate stays at or above 95\%.
 Unmet demand is summed over \emph{all} dealers, so that it also counts
@@ -548,7 +554,9 @@ harm to dealers from which stock was diverted. Cost includes fixed and
 transport costs for candidate lanes plus positive incremental transport
 on existing lanes relative to the paired no-action execution. TTR is
 reported only when recovery occurs inside the horizon, alongside the
-fraction of records in which that happens.
+fraction of records in which that happens. Reported uncertainty is a
+descriptive 95\% t interval over five network-seed means; intervals for
+bounded metrics are intersected with their $[0,1]$ parameter space.
 
 \subsection{Results}
 \input{../results/tables.tex}
@@ -560,7 +568,8 @@ stockouts about 16--18 days away from when they actually occur, because
 they assume shortage arrives at onset. Modeling inventory buffers cuts
 the timing error to 7.9 days while keeping precision at 0.96; its Brier
 score is 0.013. Adding lane exposure raises recall from 0.57 to 0.65
-overall, a paired difference of 0.082 (95\% CI $[0.0002,0.164]$). The
+overall, a paired difference of 0.082 (descriptive 95\% t interval
+$[0.0002,0.164]$). The
 gain is concentrated in the river flood, where recall rises from 0.52 to 0.77
 because many lanes cross the corridor while their endpoints lie outside
 it. For the hurricane and winter storm, lane exposure changed no
@@ -571,20 +580,21 @@ deterministic forecast simulation does not reproduce.
 
 \textbf{Resolution.} Table~\ref{tab:resolve} shows that GeoRipple's plans
 reduce mean total unmet demand from 1{,}027 to 826 units (19.6\%) at a
-mean cost of \$17.7k. The paired difference is $-202$ units (95\% CI
-$[-357,-46]$), while affected-dealer fill rate increases by 0.038 (95\%
-CI $[0.023,0.054]$). This average masks heterogeneity: unmet demand falls
+mean cost of 17.7k CU. The paired difference is $-202$ units (descriptive
+95\% t interval $[-357,-46]$), while affected-dealer fill rate increases
+by 0.038 (descriptive 95\% t interval $[0.023,0.054]$). This average masks heterogeneity: unmet demand falls
 from 1{,}333 to 1{,}110 units for the Gulf scenario and from 1{,}333 to
 899 for the river scenario, but rises from 417 to 467 for the winter
 scenario. B3 attains a higher affected-dealer fill rate (0.904) but mean
 total unmet demand is essentially unchanged (1{,}032) at a higher mean
-cost of \$21.2k, and it recovers within the horizon in only 82\% of
+cost of 21.2k CU, and it recovers within the horizon in only 82\% of
 records. Local transfers can help targeted dealers while moving
 shortages elsewhere, so affected fill rate and system-wide unmet demand
 must be read together.
 
 \textbf{Negative results.} Hazard-aware routing lowers mean unmet demand
-by 38 units relative to A2, but the paired 95\% CI ($[-104,28]$) includes
+by 38 units relative to A2, but the paired descriptive 95\% t interval
+($[-104,28]$) includes
 zero; five independent seeds do not resolve this effect. The structural
 term (A3) has no effect: the top-$K$ facility set is identical with
 $\lambda=0$ for all 15 network--hazard plans, and the resulting outcomes
@@ -594,8 +604,9 @@ Evaluating both components needs networks with multi-sourcing, cross
 docks, and longer recovery lanes.
 
 \textbf{Latency.} End-to-end planning, from forecast exposures to a
-solved plan, took 0.84\,s on average and at most 4.08\,s in the recorded
-Apple Silicon environment. These are local wall-clock measurements, not
+solved plan, took 0.84\,s on average and at most 4.08\,s across the 15
+distinct network--hazard plans in the recorded Apple Silicon environment.
+These are local wall-clock measurements, not
 a controlled cross-platform performance study.
 
 \subsection{User Study Protocol}
@@ -630,7 +641,7 @@ when customers will feel it. The wavefront reframes the decision window
 per location, so planners can prioritize demand points with the least
 slack instead of those closest to the hazard.
 
-\textbf{Why optimize over the whole network.} The budget-matched greedy
+\textbf{Why optimize over the whole network.} The action-count-matched greedy
 baseline improves fill among affected dealers but leaves aggregate unmet
 demand approximately unchanged and recovers less often within the
 horizon. Recovery decisions need the whole network's inventory balance;
@@ -645,7 +656,7 @@ hazards are stylized. The forecast ensemble and realized footprint come
 from the same hand-authored hazard family, and all members have equal
 weight; elementwise upper-quartile exposure need not correspond to a
 physically coherent scenario. Only five independently generated networks
-support the confidence intervals, so inference is weak despite 45
+support the descriptive intervals, so inference is weak despite 45
 evaluation records. The shallow layered DAG has single-parent dealers
 and only two supplier parents per DC, limiting the structural term and
 rerouting. The model has one commodity, stationary demand, fixed baseline

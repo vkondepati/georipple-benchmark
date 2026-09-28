@@ -10,6 +10,7 @@
  "cost_k": 27.15036353744072,
  "unmet_none": 1234.3450749085955,
  "unmet_plan": 1184.8611033253467,
+ "dealer_change_threshold_pp": 0.5,
  "dealers_improved": 14,
  "dealers_worse": 21
 }

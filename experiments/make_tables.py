@@ -1,4 +1,4 @@
-"""Aggregate runs with 95% confidence intervals clustered by network seed."""
+"""Aggregate runs with descriptive 95% t intervals clustered by network seed."""
 import argparse
 import json
 import os
@@ -9,13 +9,13 @@ from scipy.stats import t as student_t
 HERE = os.path.dirname(__file__)
 PRED_ROWS = [("B1", "B1 Topology-only"), ("B2", "B2 Node-only spatial"),
              ("A1", "A1 No buffers"), ("Full", "GeoRipple (full)")]
-RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Budget-matched greedy"),
+RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Action-count-matched greedy"),
             ("A2", "A2 No hazard routing"), ("A3", r"A3 $\lambda=0$"),
             ("Full", "GeoRipple (full)")]
 
 
 def clustered_stats(runs, getter, bounds=None):
-    """Mean and t interval over per-seed means; hazards are fixed strata."""
+    """Mean and descriptive t interval over seed means; hazards are fixed strata."""
     groups = {}
     for run in runs:
         value = getter(run)
@@ -52,21 +52,31 @@ def finite_mean(values):
     return float(np.mean(values)) if values else None
 
 
+def load_runs(path):
+    with open(path) as f:
+        data = json.load(f)
+    runs = data.get("runs") if isinstance(data, dict) else None
+    if not isinstance(runs, list) or not runs:
+        raise ValueError(f"{path}: expected a non-empty 'runs' list")
+    return runs
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", default=os.path.join(HERE, "..", "results", "runs.json"))
     ap.add_argument("--outdir", default=os.path.join(HERE, "..", "results"))
     a = ap.parse_args()
-    with open(a.runs) as f:
-        data = json.load(f)
-    runs = data["runs"]
+    try:
+        runs = load_runs(a.runs)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        ap.error(str(exc))
     n = len(runs)
     n_seeds = len({r["seed"] for r in runs})
     summary = {"n_records": n, "n_seed_clusters": n_seeds,
                "prediction": {}, "resolution": {}}
 
     pred_caption = (r"\caption{Stockout prediction versus realized outcome "
-                    rf"(mean [95\% CI], clustered by network seed; {n} records, "
+                    rf"(mean [descriptive 95\% seed-clustered t interval]; {n} records, "
                     rf"{n_seeds} seeds)}}")
     lines = [r"\begin{table}[t]", pred_caption,
              r"\label{tab:pred}", r"\centering", r"\small\setlength{\tabcolsep}{2pt}",
@@ -98,12 +108,12 @@ def main():
               r"\end{table}", ""]
 
     resolution_caption = (r"\caption{Resolution quality under realized hazards "
-                          rf"(mean [95\% CI], clustered by network seed; {n} records, "
+                          rf"(mean [descriptive 95\% seed-clustered t interval]; {n} records, "
                           rf"{n_seeds} seeds)}}")
     lines += [r"\begin{table}[t]", resolution_caption,
               r"\label{tab:resolve}", r"\centering", r"\small\setlength{\tabcolsep}{1.5pt}",
               r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lccccc@{}}", r"\toprule",
-              r"Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (\$k)\\",
+              r"Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (kCU)\\",
               r"\midrule"]
     for key, label in RES_ROWS:
         fr = clustered_stats(
@@ -128,9 +138,16 @@ def main():
     lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}", recovery_note,
               r"\end{table}"]
 
-    lat = [r["latency_seconds_full"] for r in runs]
+    plan_latencies = {(r["seed"], r["hazard"]): r["latency_seconds_full"] for r in runs}
+    lat = list(plan_latencies.values())
     summary["latency_seconds_full"] = {"mean": float(np.mean(lat)),
-                                       "max": float(np.max(lat))}
+                                       "max": float(np.max(lat)),
+                                       "n_plans": len(lat)}
+    summary["interval_method"] = {
+        "description": "descriptive t interval over network-seed means",
+        "bounded_metrics": "intersected with the metric's [0, 1] parameter space",
+        "hazards": "fixed strata",
+    }
     summary["per_hazard"] = {}
     for hz in sorted({r["hazard"] for r in runs}):
         sub = [r for r in runs if r["hazard"] == hz]

@@ -21,6 +21,7 @@ python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.lock
 make test
+make check      # tests, focused lint, strict JSON, and artifact drift
 make bench       # 5 network seeds x 3 hazards x 3 delay replicates
 make tables      # results/summary.json and results/tables.tex
 make figures     # paper/figures/fig_{wavefront,resolution}.{png,pdf}
@@ -49,10 +50,10 @@ The repository includes the exact generated artifact used by the manuscript:
 | `georipple/simulate.py` | Daily inventory/flow simulator with transit and receiving queues |
 | `georipple/predict.py` | Wavefront prediction, baselines B1/B2/A1, and STCI |
 | `georipple/routing.py` | Hazard-avoiding visibility-graph routing proxy |
-| `georipple/resolve.py` | Recovery candidates, MILP, and budget-matched greedy B3 |
+| `georipple/resolve.py` | Recovery candidates, MILP, and action-count-matched greedy B3 |
 | `georipple/evaluate.py` | Stochastic execution and prediction/recovery metrics |
 | `experiments/run_benchmark.py` | Benchmark runner and provenance capture |
-| `experiments/make_tables.py` | Seed-clustered CIs and paired comparisons |
+| `experiments/make_tables.py` | Seed-clustered descriptive intervals and paired comparisons |
 | `experiments/make_figures.py` | Static map figures for one illustrative run |
 | `paper/georipple_paper.tex` | Manuscript source |
 | `data/README.md` | Attribution for the map boundary data |
@@ -63,9 +64,10 @@ The checked-in run uses a 28-day horizon, eight forecast members, top-$K=10$,
 a 60-second MILP time limit, five independently generated networks, three fixed
 hazard scenarios, and three stochastic execution replicates per network/hazard
 pair. Plans and predictions are built once per network/hazard pair and then
-evaluated under the three delay realizations. Confidence intervals and paired
+evaluated under the three delay realizations. Descriptive intervals and paired
 effects use network seed as the independent cluster ($n=5$); the 45 records are
-not treated as independent samples.
+not treated as independent samples. Reported intervals are descriptive t
+intervals over seed means, with bounded metrics intersected with $[0,1]$.
 
 Important interpretation limits:
 
@@ -89,7 +91,8 @@ Important interpretation limits:
 Across the synthetic benchmark, GeoRipple has precision 0.96, recall 0.65,
 Brier score 0.013, and stockout timing MAE 7.9 days. Its plans reduce mean total
 unmet demand from 1,027 to 826 units (paired mean difference -202; seed-clustered
-95% CI -357 to -46), at mean recovery cost $17.7k. This aggregate result is not
+descriptive 95% t interval -357 to -46), at mean recovery cost 17.7k synthetic
+cost units (CU). This aggregate result is not
 uniform: the plan improves the Gulf and river scenarios but slightly worsens the
 winter scenario. See `results/summary.json` for all intervals and strata.
 

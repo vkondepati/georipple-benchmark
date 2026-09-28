@@ -1,5 +1,5 @@
 \begin{table}[t]
-\caption{Stockout prediction versus realized outcome (mean [95\% CI], clustered by network seed; 45 records, 5 seeds)}
+\caption{Stockout prediction versus realized outcome (mean [descriptive 95\% seed-clustered t interval]; 45 records, 5 seeds)}
 \label{tab:pred}
 \centering
 \small\setlength{\tabcolsep}{2pt}
@@ -19,17 +19,17 @@ GeoRipple (full) & 0.96 [0.91, 1.00] & 0.65 [0.57, 0.74] & 0.013 [0.009, 0.018] 
 \end{table}
 
 \begin{table}[t]
-\caption{Resolution quality under realized hazards (mean [95\% CI], clustered by network seed; 45 records, 5 seeds)}
+\caption{Resolution quality under realized hazards (mean [descriptive 95\% seed-clustered t interval]; 45 records, 5 seeds)}
 \label{tab:resolve}
 \centering
 \small\setlength{\tabcolsep}{1.5pt}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lccccc@{}}
 \toprule
-Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (\$k)\\
+Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (kCU)\\
 \midrule
 No action & 0.856 [0.840, 0.872] & 1027 [895, 1159] & 98\% [92\%, 100\%] & 19.8 [18.6, 21.1] & 0.0 [0.0, 0.0] \\
-B3 Budget-matched greedy & 0.904 [0.895, 0.912] & 1032 [745, 1319] & 82\% [57\%, 100\%] & 17.4 [15.6, 19.2] & 21.2 [15.4, 27.0] \\
+B3 Action-count-matched greedy & 0.904 [0.895, 0.912] & 1032 [745, 1319] & 82\% [57\%, 100\%] & 17.4 [15.6, 19.2] & 21.2 [15.4, 27.0] \\
 A2 No hazard routing & 0.888 [0.880, 0.896] & 864 [742, 985] & 96\% [88\%, 100\%] & 20.7 [20.4, 21.0] & 17.4 [13.0, 21.8] \\
 A3 $\lambda=0$ & 0.894 [0.885, 0.903] & 826 [733, 918] & 96\% [88\%, 100\%] & 20.7 [20.3, 21.1] & 17.7 [11.0, 24.4] \\
 GeoRipple (full) & 0.894 [0.885, 0.903] & 826 [733, 918] & 96\% [88\%, 100\%] & 20.7 [20.3, 21.1] & 17.7 [11.0, 24.4] \\
