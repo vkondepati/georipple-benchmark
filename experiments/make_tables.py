@@ -121,8 +121,8 @@ def main():
             "unmet_units": {k: float(np.mean([r["resolution"][k]["unmet_units"] for r in sub]))
                             for k, _ in RES_ROWS},
         }
-    summary["stci_topk_changed_with_lambda0"] = int(
-        sum(r["stci_top_changed_lambda0"] for r in runs))
+    plan_changes = {(r["seed"], r["hazard"]): r["stci_top_changed_lambda0"] for r in runs}
+    summary["stci_topk_changed_with_lambda0"] = int(sum(plan_changes.values()))
     effects = {
         "recall_full_minus_b2": lambda r: (
             r["prediction"]["Full"]["recall"] - r["prediction"]["B2"]["recall"]),

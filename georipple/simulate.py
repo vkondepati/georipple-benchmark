@@ -39,20 +39,6 @@ def initial_pipeline(net, T):
     return pipe
 
 
-def pipeline_receipts(net, x_node, pipe, T):
-    """Schedule exogenous pipeline receipts through arrival-day capacity."""
-    pending = np.zeros(net.n)
-    received = np.zeros((net.n, T))
-    residual = np.zeros((net.n, T))
-    for t in range(T):
-        incoming = pending + pipe[:, t]
-        cap = np.maximum(net.recv_cap * (1.0 - x_node[:, t]), 0.0)
-        received[:, t] = np.minimum(incoming, cap)
-        pending = incoming - received[:, t]
-        residual[:, t] = cap - received[:, t]
-    return received, residual
-
-
 def simulate(net, lanes, x_node, x_edge, S, T, pipe=None, delays=None, I0=None):
     n, E = net.n, len(lanes.src)
     I = (net.I0 if I0 is None else I0).astype(float).copy()

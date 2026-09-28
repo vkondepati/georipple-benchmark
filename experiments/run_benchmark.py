@@ -42,8 +42,8 @@ def provenance():
             "git_commit": commit, "git_dirty": dirty}
 
 
-def plan_and_execute(net, ens, exps, p, score, h, T, seed, router, K, time_limit,
-                     hazard_aware=True):
+def build_plan(net, ens, exps, p, score, T, router, K, time_limit,
+               hazard_aware=True):
     t0 = time.perf_counter()
     p_exp = np.mean([xn.max(1) > 0 for xn, _ in exps], 0)
     cand, top = generate_candidates(net, p >= 0.5, score, p_exp,
@@ -60,12 +60,11 @@ def plan_and_execute(net, ens, exps, p, score, h, T, seed, router, K, time_limit
                                 time_limit=time_limit)
     plan_s = time.perf_counter() - t0
     S_exist, S_cand = execution_schedule(net, fe, fc, y, T)
-    r, cost = execute_truth(net, h, T, seed, cand, S_exist, S_cand, y)
     info.update({"plan_seconds": plan_s, "activated": int(y.sum()), "top_k": top})
-    return r, cost, info
+    return (cand, S_exist, S_cand, y), info
 
 
-def run(seeds, T, K, time_limit, M):
+def run(seeds, T, K, time_limit, M, truth_reps=3):
     runs = []
     for seed in range(seeds):
         for hi, h in enumerate(base_hazards()):
@@ -81,18 +80,6 @@ def run(seeds, T, K, time_limit, M):
             p_a1, s_a1, _ = predict_wavefront(net, exps, T, use_buffers=False)
             p_b1, s_b1 = predict_topology_only(net, ens, T)
 
-            truth, _ = execute_truth(net, h, T, seed)
-            calm = Hazard(h.name, h.poly, T + 1, T + 1, 0.0)      # same delays, no hazard
-            nohaz, _ = execute_truth(net, calm, T, seed)
-            affected = attributable_stockouts(net, truth.sigma, nohaz.sigma, T)
-            pred = {
-                "B1": prediction_metrics(net, p_b1, s_b1, truth.sigma, T, affected),
-                "B2": prediction_metrics(net, p_b2, s_b2, truth.sigma, T, affected),
-                "A1": prediction_metrics(net, p_a1, s_a1, truth.sigma, T, affected),
-                "Full": prediction_metrics(net, p_full, s_full, truth.sigma, T, affected),
-            }
-
-            res = {"NoAction": resolution_metrics(net, truth, affected, h, T, 0.0)}
             score1 = stci(net, exps, dar, lam=1.0)
             score0 = stci(net, exps, dar, lam=0.0)
             t_r = time.perf_counter()
@@ -100,33 +87,55 @@ def run(seeds, T, K, time_limit, M):
             router_s = time.perf_counter() - t_r
 
             info = {}
-            r, c, info["Full"] = plan_and_execute(net, ens, exps, p_full, score1, h, T, seed,
-                                                  router, K, time_limit)
-            res["Full"] = resolution_metrics(net, r, affected, h, T, c)
-            r, c, info["A2"] = plan_and_execute(net, ens, exps, p_full, score1, h, T, seed,
-                                                router, K, time_limit, hazard_aware=False)
-            res["A2"] = resolution_metrics(net, r, affected, h, T, c)
-            r, c, info["A3"] = plan_and_execute(net, ens, exps, p_full, score0, h, T, seed,
-                                                router, K, time_limit)
-            res["A3"] = resolution_metrics(net, r, affected, h, T, c)
+            plans = {}
+            plans["Full"], info["Full"] = build_plan(
+                net, ens, exps, p_full, score1, T, router, K, time_limit)
+            plans["A2"], info["A2"] = build_plan(
+                net, ens, exps, p_full, score1, T, router, K, time_limit,
+                hazard_aware=False)
+            plans["A3"], info["A3"] = build_plan(
+                net, ens, exps, p_full, score0, T, router, K, time_limit)
             p_exp = np.mean([xn.max(1) > 0 for xn, _ in exps], 0)
-            cand, Se, Sc, y = greedy_nearest(
+            plans["B3"] = greedy_nearest(
                 net, p_full >= 0.5, p_exp, T,
                 max_lanes=info["Full"]["activated"], priority=dar.mean(0))
-            r, c = execute_truth(net, h, T, seed, cand, Se, Sc, y)
-            res["B3"] = resolution_metrics(net, r, affected, h, T, c)
 
             latency = pred_seconds + router_s + info["Full"]["plan_seconds"]
-            rec = {"seed": seed, "hazard": h.name, "prediction": pred, "resolution": res,
-                   "plan_info": {k: {kk: vv for kk, vv in v.items() if kk != "top_k"}
-                                 for k, v in info.items()},
-                   "stci_top_changed_lambda0": sorted(info["Full"]["top_k"]) != sorted(info["A3"]["top_k"]),
-                   "latency_seconds_full": latency,
-                   "wall_seconds": time.perf_counter() - t_start}
-            runs.append(rec)
-            print(f"seed={seed} {h.name:24s} affected={res['NoAction']['n_affected']:3d} "
-                  f"fill: none={res['NoAction']['fill_rate']:.3f} B3={res['B3']['fill_rate']:.3f} "
-                  f"full={res['Full']['fill_rate']:.3f}  latency={latency:.1f}s", flush=True)
+            top_changed = sorted(info["Full"]["top_k"]) != sorted(info["A3"]["top_k"])
+            calm = Hazard(h.name, h.poly, T + 1, T + 1, 0.0)
+            for truth_rep in range(truth_reps):
+                t_exec = time.perf_counter()
+                truth_seed = seed * 10_000 + truth_rep
+                truth, _ = execute_truth(net, h, T, truth_seed)
+                nohaz, _ = execute_truth(net, calm, T, truth_seed)
+                affected = attributable_stockouts(net, truth.sigma, nohaz.sigma, T)
+                pred = {
+                    "B1": prediction_metrics(net, p_b1, s_b1, truth.sigma, T, affected),
+                    "B2": prediction_metrics(net, p_b2, s_b2, truth.sigma, T, affected),
+                    "A1": prediction_metrics(net, p_a1, s_a1, truth.sigma, T, affected),
+                    "Full": prediction_metrics(net, p_full, s_full, truth.sigma, T, affected),
+                }
+                res = {"NoAction": resolution_metrics(net, truth, affected, h, T, 0.0)}
+                for key, plan in plans.items():
+                    cand, Se, Sc, y = plan
+                    r, cost = execute_truth(net, h, T, truth_seed, cand, Se, Sc, y)
+                    res[key] = resolution_metrics(net, r, affected, h, T, cost)
+                rec = {
+                    "seed": seed, "truth_rep": truth_rep, "hazard": h.name,
+                    "prediction": pred, "resolution": res,
+                    "plan_info": {k: {kk: vv for kk, vv in v.items() if kk != "top_k"}
+                                  for k, v in info.items()},
+                    "stci_top_changed_lambda0": top_changed,
+                    "latency_seconds_full": latency,
+                    "execution_seconds": time.perf_counter() - t_exec,
+                    "wall_seconds": time.perf_counter() - t_start,
+                }
+                runs.append(rec)
+                print(f"seed={seed} rep={truth_rep} {h.name:24s} "
+                      f"affected={res['NoAction']['n_affected']:3d} "
+                      f"fill: none={res['NoAction']['fill_rate']:.3f} "
+                      f"B3={res['B3']['fill_rate']:.3f} full={res['Full']['fill_rate']:.3f} "
+                      f"latency={latency:.1f}s", flush=True)
     return runs
 
 
@@ -136,10 +145,11 @@ def main():
     ap.add_argument("--horizon", type=int, default=28)
     ap.add_argument("--top-k", type=int, default=10)
     ap.add_argument("--members", type=int, default=8)
+    ap.add_argument("--truth-reps", type=int, default=3)
     ap.add_argument("--time-limit", type=float, default=60.0)
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "results", "runs.json"))
     a = ap.parse_args()
-    runs = run(a.seeds, a.horizon, a.top_k, a.time_limit, a.members)
+    runs = run(a.seeds, a.horizon, a.top_k, a.time_limit, a.members, a.truth_reps)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     config = {k: v for k, v in vars(a).items() if k != "out"}
     with open(a.out, "w") as f:

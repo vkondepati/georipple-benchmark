@@ -83,6 +83,26 @@ def test_milp_schedule_is_executed_without_postprocessing():
     assert np.allclose(r.shipped, fe, atol=1e-7)
 
 
+def test_milp_preserves_baseline_and_models_receiving_queue():
+    Tq = 5
+    net = Network(
+        xy=np.array([[0.0, 0.0], [1.0, 0.0]]),
+        kind=np.array([0, DEALER]), demand=np.array([0.0, 1.0]),
+        prod=np.array([1.0, 0.0]), node_cap=np.array([2.0, 0.0]),
+        recv_cap=np.array([0.0, 1.0]), I0=np.array([2.0, 0.0]),
+        src=np.array([0]), dst=np.array([1]), km=np.array([1.0]),
+        tau=np.array([2]), cap=np.array([2.0]), base_f=np.array([1.0]))
+    xn = np.zeros((2, Tq)); xn[1, 2] = 1.0
+    xe = np.zeros((1, Tq)); pipe = initial_pipeline(net, Tq)
+    baseline = simulate(net, existing_lanes(net), xn, xe, baseline_schedule(net, Tq),
+                        Tq, pipe=pipe).shipped
+    fe, _, _, _ = plan_milp(net, Candidates(), xn, xe, np.zeros((0, Tq)),
+                            Tq, pipe, time_limit=5.0)
+    assert np.all(fe >= baseline - 1e-8)
+    executed = simulate(net, existing_lanes(net), xn, xe, fe, Tq, pipe=pipe)
+    assert np.allclose(executed.shipped, fe, atol=1e-7)
+
+
 def test_stci_attributes_last_mile_exposure_to_parent_facility():
     net = Network(
         xy=np.array([[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]]),

@@ -6,7 +6,7 @@ from scipy.optimize import milp, LinearConstraint, Bounds
 from shapely.geometry import LineString
 
 from .network import SUP, DC, DEALER, ROAD_FACTOR, lane_tau
-from .simulate import pipeline_receipts
+from .simulate import simulate, existing_lanes, baseline_schedule
 
 UNIT_COST_PER_KM = 0.01     # $ per unit per road km
 FIXED_BASE = 1000.0         # $ fixed cost to open a lane
@@ -115,7 +115,12 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
     dealers = net.dealers
     dl_index = {int(v): j for j, v in enumerate(dealers)}
     R = len(dealers)
-    oF, oI, oU, oY = 0, nE * T, nE * T + n * T, nE * T + n * T + R * T
+    oF = 0
+    oI = nE * T
+    oU = oI + n * T
+    oR = oU + R * T              # receipts after inbound-capacity queueing
+    oQ = oR + n * T              # end-of-day inbound queue
+    oY = oQ + n * T
     nvar = oY + C
 
     rows, cols, vals = [], [], []
@@ -125,25 +130,38 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
         for t in range(T):
             j = oF + e * T + t
             rows.append(row(src[e], t)); cols.append(j); vals.append(1.0)
-            if t + tau[e] < T:
-                rows.append(row(dst[e], t + tau[e])); cols.append(j); vals.append(-1.0)
     for v in range(n):
         for t in range(T):
             j = oI + v * T + t
             rows.append(row(v, t)); cols.append(j); vals.append(1.0)
             if t + 1 < T:
                 rows.append(row(v, t + 1)); cols.append(j); vals.append(-1.0)
+            rows.append(row(v, t)); cols.append(oR + v * T + t); vals.append(-1.0)
     for v in dealers:
         for t in range(T):
             rows.append(row(v, t)); cols.append(oU + dl_index[int(v)] * T + t); vals.append(-1.0)
     A_eq = sp.csr_matrix((vals, (rows, cols)), shape=(n * T, nvar))
-    pipe_received, recv_residual = pipeline_receipts(net, xn, pipe, T)
-    b = pipe_received.copy()
+    b = np.zeros((n, T))
     is_sup = net.kind == SUP
     b[is_sup] += (net.prod[is_sup, None] * (1 - xn[is_sup]))
     b[dealers] -= net.demand[dealers, None]
     b[:, 0] += net.I0
     b_eq = b.reshape(-1)
+
+    # inbound queue: Q_t = Q_{t-1} + pipeline_t + arrivals_t - receipts_t
+    qr, qc, qv = [], [], []
+    for v in range(n):
+        for t in range(T):
+            qr.append(row(v, t)); qc.append(oQ + v * T + t); qv.append(1.0)
+            if t > 0:
+                qr.append(row(v, t)); qc.append(oQ + v * T + t - 1); qv.append(-1.0)
+            qr.append(row(v, t)); qc.append(oR + v * T + t); qv.append(1.0)
+    for e in range(nE):
+        for t in range(T):
+            at = t + tau[e]
+            if at < T:
+                qr.append(row(dst[e], at)); qc.append(oF + e * T + t); qv.append(-1.0)
+    A_queue = sp.csr_matrix((qv, (qr, qc)), shape=(n * T, nvar))
 
     # node outbound capacity
     nd = np.where(net.kind != DEALER)[0]
@@ -155,15 +173,9 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
                 r2.append(nd_index[src[e]] * T + t); c2.append(oF + e * T + t); v2.append(1.0)
     A_cap = sp.csr_matrix((v2, (r2, c2)), shape=(len(nd) * T, nvar))
     ub_cap = (net.node_cap[nd, None] * (1 - xn[nd])).reshape(-1)
-    # shared node receiving capacity on the arrival day
-    arrivals = [(e, t, t + tau[e]) for e in range(nE) for t in range(T)
-                if t + tau[e] < T]
-    r4 = [dst[e] * T + at for e, t, at in arrivals]
-    c4 = [oF + e * T + t for e, t, at in arrivals]
-    A_recv = sp.csr_matrix((np.ones(len(r4)), (r4, c4)), shape=(n * T, nvar))
-    ub_recv = recv_residual.reshape(-1)
-    cons = [LinearConstraint(A_eq, b_eq, b_eq), LinearConstraint(A_cap, -np.inf, ub_cap),
-            LinearConstraint(A_recv, -np.inf, ub_recv)]
+    cons = [LinearConstraint(A_eq, b_eq, b_eq),
+            LinearConstraint(A_queue, pipe.reshape(-1), pipe.reshape(-1)),
+            LinearConstraint(A_cap, -np.inf, ub_cap)]
 
     if C:
         r3, c3, v3 = [], [], []
@@ -176,12 +188,16 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
 
     cost = np.zeros(nvar)
     cost[oF:oI] = np.repeat(UNIT_COST_PER_KM * km, T)
-    cost[oU:oY] = SHORTAGE_PENALTY
+    cost[oU:oR] = SHORTAGE_PENALTY
     if C:
         cost[oY:] = cand.fixed_cost
     lb = np.zeros(nvar)
     ub = np.full(nvar, np.inf)
     ub[oF:oI] = np.maximum(ub_f, 0).reshape(-1)
+    baseline = simulate(net, existing_lanes(net), xn, xe, baseline_schedule(net, T),
+                        T, pipe=pipe).shipped
+    lb[oF:oF + E * T] = np.minimum(baseline, ub_f[:E]).reshape(-1)
+    ub[oR:oQ] = np.maximum(net.recv_cap[:, None] * (1 - xn), 0).reshape(-1)
     ub[oY:] = 1.0
     integrality = np.zeros(nvar)
     integrality[oY:] = 1
