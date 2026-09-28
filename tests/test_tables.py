@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
 
-from make_tables import clustered_stats  # noqa: E402
+from make_tables import clustered_stats
 
 
 def test_clustered_stats_uses_seed_as_independent_unit():

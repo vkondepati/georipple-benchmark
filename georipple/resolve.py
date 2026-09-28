@@ -1,12 +1,13 @@
 """Hazard-aware resolution: candidate recovery lanes + time-expanded MILP."""
 from dataclasses import dataclass, field
+
 import numpy as np
 import scipy.sparse as sp
-from scipy.optimize import milp, LinearConstraint, Bounds
+from scipy.optimize import Bounds, LinearConstraint, milp
 from shapely.geometry import LineString
 
-from .network import SUP, DC, DEALER, ROAD_FACTOR, lane_tau
-from .simulate import simulate, existing_lanes, baseline_schedule
+from .network import DC, DEALER, ROAD_FACTOR, SUP, lane_tau
+from .simulate import baseline_schedule, existing_lanes, simulate
 
 UNIT_COST_PER_KM = 0.01     # $ per unit per road km
 FIXED_BASE = 1000.0         # $ fixed cost to open a lane
@@ -56,9 +57,10 @@ def generate_candidates(net, stranded, score, p_exposed, router=None, K=10,
     """
     top = [int(v) for v in np.argsort(-score)[:K] if score[v] > 0]
     ch = net.children()
-    parent = {int(d): int(s) for s, d in zip(net.src, net.dst) if net.kind[d] == DEALER}
+    parent = {int(d): int(s) for s, d in zip(net.src, net.dst, strict=True)
+              if net.kind[d] == DEALER}
     sup_of = {}
-    for s, d in zip(net.src, net.dst):
+    for s, d in zip(net.src, net.dst, strict=True):
         if net.kind[d] == DC:
             sup_of.setdefault(int(d), set()).add(int(s))
 
@@ -223,7 +225,8 @@ def execution_schedule(net, f_exist, f_cand, y, T):
 def greedy_nearest(net, stranded, p_exposed, T, r_lateral=600.0,
                    max_lanes=None, priority=None):
     """B3: add nearest-DC lanes in priority order, subject to an action budget."""
-    parent = {int(d): int(s) for s, d in zip(net.src, net.dst) if net.kind[d] == DEALER}
+    parent = {int(d): int(s) for s, d in zip(net.src, net.dst, strict=True)
+              if net.kind[d] == DEALER}
     ok_dc = np.where((net.kind == DC) & (p_exposed < 0.5))[0]
     cand = Candidates()
     dealers = np.where(stranded)[0]

@@ -7,9 +7,10 @@ any specific historical event. Replace them with real GeoJSON footprints
 (see README) for a historically grounded study.
 """
 from dataclasses import dataclass
+
 import numpy as np
 from shapely import affinity
-from shapely.geometry import Point, Polygon, LineString
+from shapely.geometry import LineString, Point, Polygon
 from shapely.prepared import prep
 
 from .geo import project_coords

@@ -7,6 +7,7 @@ through a visibility graph built on the obstacle's (slightly inflated)
 boundary vertices. Distances are then scaled by the road factor.
 """
 import heapq
+
 import numpy as np
 from shapely.geometry import LineString, Point
 from shapely.ops import unary_union

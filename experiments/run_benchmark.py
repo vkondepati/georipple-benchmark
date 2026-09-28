@@ -4,29 +4,40 @@ Usage:
     python experiments/run_benchmark.py --seeds 5 --horizon 28
 """
 import argparse
-from importlib.metadata import version
 import json
 import os
 import platform
 import subprocess
 import sys
 import time
+from importlib.metadata import version
 
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from georipple.network import generate, DEALER                       # noqa: E402
-from georipple.hazards import Hazard, base_hazards, forecast_ensemble, edge_exposure  # noqa: E402
-from georipple.predict import (ensemble_exposures, predict_wavefront,  # noqa: E402
-                               predict_topology_only, stci)
-from georipple.resolve import (generate_candidates, plan_milp,        # noqa: E402
-                               execution_schedule, greedy_nearest)
-from georipple.routing import HazardRouter                             # noqa: E402
-from georipple.simulate import initial_pipeline                        # noqa: E402
-from georipple.evaluate import (execute_truth, prediction_metrics,     # noqa: E402
-                                resolution_metrics, attributable_stockouts)
-
+from georipple.evaluate import (
+    attributable_stockouts,
+    execute_truth,
+    prediction_metrics,
+    resolution_metrics,
+)
+from georipple.hazards import Hazard, base_hazards, edge_exposure, forecast_ensemble
+from georipple.network import generate
+from georipple.predict import (
+    ensemble_exposures,
+    predict_topology_only,
+    predict_wavefront,
+    stci,
+)
+from georipple.resolve import (
+    execution_schedule,
+    generate_candidates,
+    greedy_nearest,
+    plan_milp,
+)
+from georipple.routing import HazardRouter
+from georipple.simulate import initial_pipeline
 
 PLAN_QUANTILE = 0.75
 PACKAGES = ("numpy", "scipy", "shapely", "networkx")
@@ -103,6 +114,7 @@ def run(seeds, T, K, time_limit, M, truth_reps=3):
             latency = pred_seconds + router_s + info["Full"]["plan_seconds"]
             top_changed = sorted(info["Full"]["top_k"]) != sorted(info["A3"]["top_k"])
             calm = Hazard(h.name, h.poly, T + 1, T + 1, 0.0)
+            planning_wall = time.perf_counter() - t_start
             for truth_rep in range(truth_reps):
                 t_exec = time.perf_counter()
                 truth_seed = seed * 10_000 + truth_rep
@@ -118,8 +130,10 @@ def run(seeds, T, K, time_limit, M, truth_reps=3):
                 res = {"NoAction": resolution_metrics(net, truth, affected, h, T, 0.0)}
                 for key, plan in plans.items():
                     cand, Se, Sc, y = plan
-                    r, cost = execute_truth(net, h, T, truth_seed, cand, Se, Sc, y)
+                    r, cost = execute_truth(net, h, T, truth_seed, cand, Se, Sc, y,
+                                            baseline_shipped=truth.shipped)
                     res[key] = resolution_metrics(net, r, affected, h, T, cost)
+                execution_seconds = time.perf_counter() - t_exec
                 rec = {
                     "seed": seed, "truth_rep": truth_rep, "hazard": h.name,
                     "prediction": pred, "resolution": res,
@@ -127,8 +141,8 @@ def run(seeds, T, K, time_limit, M, truth_reps=3):
                                   for k, v in info.items()},
                     "stci_top_changed_lambda0": top_changed,
                     "latency_seconds_full": latency,
-                    "execution_seconds": time.perf_counter() - t_exec,
-                    "wall_seconds": time.perf_counter() - t_start,
+                    "execution_seconds": execution_seconds,
+                    "wall_seconds": planning_wall + execution_seconds,
                 }
                 runs.append(rec)
                 print(f"seed={seed} rep={truth_rep} {h.name:24s} "
@@ -152,9 +166,11 @@ def main():
     runs = run(a.seeds, a.horizon, a.top_k, a.time_limit, a.members, a.truth_reps)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     config = {k: v for k, v in vars(a).items() if k != "out"}
-    with open(a.out, "w") as f:
+    tmp = a.out + ".tmp"
+    with open(tmp, "w") as f:
         json.dump({"config": config, "provenance": provenance(), "runs": runs},
                   f, indent=1, default=float)
+    os.replace(tmp, a.out)
     print("wrote", a.out)
 
 

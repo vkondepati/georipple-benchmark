@@ -16,31 +16,41 @@ import os
 import sys
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
 import numpy as np
+from matplotlib.lines import Line2D
 
 HERE = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, HERE)
 
-from georipple.geo import project                                   # noqa: E402
-from georipple.network import generate, SUP, DC, DEALER              # noqa: E402
-from georipple.hazards import base_hazards, forecast_ensemble, edge_exposure  # noqa: E402
-from georipple.predict import ensemble_exposures, predict_wavefront, stci    # noqa: E402
-from georipple.resolve import generate_candidates, plan_milp, execution_schedule  # noqa: E402
-from georipple.routing import HazardRouter                           # noqa: E402
-from georipple.simulate import initial_pipeline                      # noqa: E402
-from georipple.evaluate import execute_truth                         # noqa: E402
-from run_benchmark import PLAN_QUANTILE                              # noqa: E402
+from run_benchmark import PLAN_QUANTILE
+
+from georipple.evaluate import execute_truth
+from georipple.geo import project
+from georipple.hazards import (
+    base_hazards,
+    edge_exposure,
+    forecast_ensemble,
+)
+from georipple.network import DC, SUP, generate
+from georipple.predict import ensemble_exposures, predict_wavefront, stci
+from georipple.resolve import (
+    execution_schedule,
+    generate_candidates,
+    plan_milp,
+)
+from georipple.routing import HazardRouter
+from georipple.simulate import initial_pipeline
 
 plt.rcParams.update({"font.family": "serif", "font.size": 8})
 
 
 def draw_states(ax):
-    gj = json.load(open(os.path.join(HERE, "..", "data", "us-states.json")))
+    with open(os.path.join(HERE, "..", "data", "us-states.json")) as f:
+        gj = json.load(f)
     for f in gj["features"]:
         g = f["geometry"]
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
@@ -128,8 +138,9 @@ def main():
     xc = np.quantile([edge_exposure(cand.geoms, m, T) for m in ens], q, axis=0)
     fe, fc, y, _ = plan_milp(net, cand, xn, xe, xc, T, initial_pipeline(net, T))
     Se, Sc = execution_schedule(net, fe, fc, y, T)
-    r_plan, cost = execute_truth(net, h, T, seed, cand, Se, Sc, y)
     r_none, _ = execute_truth(net, h, T, seed)
+    r_plan, cost = execute_truth(net, h, T, seed, cand, Se, Sc, y,
+                                 baseline_shipped=r_none.shipped)
     gain = (r_plan.served[dl].sum(1) - r_none.served[dl].sum(1)) / (net.demand[dl] * T)
 
     fig, ax = plt.subplots(figsize=(3.45, 2.6))
@@ -156,14 +167,15 @@ def main():
         fig.savefig(os.path.join(a.outdir, f"fig_resolution.{ext}"), dpi=300)
     plt.close(fig)
 
-    stats = {"seed": seed, "hazard": h.name, "n_predicted": int(len(pred)),
+    stats = {"seed": seed, "hazard": h.name, "n_predicted": len(pred),
              "n_exposed_lanes": int((xe_mean >= 0.5).sum()),
              "activated": {k: int(sum(1 for i in np.where(y)[0] if cand.kind[i] == k))
                            for k in colors},
              "cost_k": cost / 1000, "unmet_none": float((net.demand[dl, None] - r_none.served[dl]).clip(0).sum()),
              "unmet_plan": float((net.demand[dl, None] - r_plan.served[dl]).clip(0).sum()),
              "dealers_improved": int((gain > 0.005).sum()), "dealers_worse": int((gain < -0.005).sum())}
-    json.dump(stats, open(os.path.join(a.outdir, "figure_stats.json"), "w"), indent=1)
+    with open(os.path.join(a.outdir, "figure_stats.json"), "w") as f:
+        json.dump(stats, f, indent=1)
     print(json.dumps(stats, indent=1))
 
 

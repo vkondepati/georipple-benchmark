@@ -1,10 +1,10 @@
 """Stockout prediction methods and the Spatio-Topological Criticality Index."""
-import numpy as np
 import networkx as nx
+import numpy as np
 
-from .hazards import node_exposure, edge_exposure
+from .hazards import edge_exposure, node_exposure
 from .network import DEALER
-from .simulate import simulate, existing_lanes, baseline_schedule, initial_pipeline
+from .simulate import baseline_schedule, existing_lanes, initial_pipeline, simulate
 
 
 def ensemble_exposures(net, ens, T):
@@ -66,7 +66,7 @@ def stci(net, exps, dar_members, lam=1.0):
             dd = net.downstream_dealers(v, ch)
             down[v] = dar[dd].sum() if dd else 0.0
     g = nx.DiGraph()
-    g.add_edges_from(zip(net.src.tolist(), net.dst.tolist()))
+    g.add_edges_from(zip(net.src.tolist(), net.dst.tolist(), strict=True))
     bc = nx.betweenness_centrality(g, normalized=True)
     B = np.array([bc.get(v, 0.0) for v in range(n)])
     norm = lambda a: a / a.max() if a.max() > 0 else a

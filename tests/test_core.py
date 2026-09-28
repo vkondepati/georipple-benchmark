@@ -2,19 +2,35 @@ import os
 import sys
 
 import numpy as np
+import pytest
 from shapely.geometry import LineString
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from georipple.network import generate, Network, DEALER            # noqa: E402
-from georipple.hazards import Hazard, base_hazards, node_exposure, edge_exposure  # noqa: E402
-from georipple.routing import HazardRouter                         # noqa: E402
-from georipple.resolve import (Candidates, execution_schedule, greedy_nearest,  # noqa: E402
-                               plan_milp)
-from georipple.predict import stci                                 # noqa: E402
-from georipple.evaluate import execute_truth, resolution_metrics   # noqa: E402
-from georipple.simulate import (Lanes, SimResult, simulate, existing_lanes, baseline_schedule,  # noqa: E402
-                                initial_pipeline)
+from georipple.evaluate import execute_truth, resolution_metrics
+from georipple.hazards import (
+    Hazard,
+    base_hazards,
+    edge_exposure,
+    node_exposure,
+)
+from georipple.network import DEALER, Network, generate
+from georipple.predict import stci
+from georipple.resolve import (
+    Candidates,
+    execution_schedule,
+    greedy_nearest,
+    plan_milp,
+)
+from georipple.routing import HazardRouter
+from georipple.simulate import (
+    Lanes,
+    SimResult,
+    baseline_schedule,
+    existing_lanes,
+    initial_pipeline,
+    simulate,
+)
 
 T = 21
 
@@ -125,6 +141,19 @@ def test_activated_lane_incurs_fixed_cost_without_flow():
     _, cost = execute_truth(net, h, T, 0, cand,
                             baseline_schedule(net, T), np.zeros((1, T)), np.array([True]))
     assert cost == cand.fixed_cost[0]
+
+
+def test_recovery_cost_includes_extra_existing_lane_transport():
+    net = generate(0, n_dc=4, n_dealer=8)
+    h = Hazard("calm", base_hazards()[0].poly, T + 1, T + 1, 0.0)
+    baseline, _ = execute_truth(net, h, T, 0)
+    schedule = baseline_schedule(net, T)
+    schedule[0] *= 1.1
+    planned, cost = execute_truth(net, h, T, 0, S_exist=schedule,
+                                  baseline_shipped=baseline.shipped)
+    extra = np.maximum(planned.shipped - baseline.shipped, 0.0)
+    expected = (extra * 0.01 * net.km[:, None]).sum()
+    assert cost == pytest.approx(expected)
 
 
 def test_ttr_is_censored_when_recovery_is_not_observed():

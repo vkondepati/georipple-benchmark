@@ -1,9 +1,10 @@
 """Synthetic three-echelon supply network (suppliers -> DCs -> dealers)."""
 from dataclasses import dataclass, field
+
 import numpy as np
 from shapely.geometry import LineString
 
-from .geo import city_table, SUPPLIER_CITIES
+from .geo import SUPPLIER_CITIES, city_table
 
 SUP, DC, DEALER = 0, 1, 2
 ROAD_FACTOR = 1.25      # road km per straight-line km
@@ -41,7 +42,7 @@ class Network:
 
     def children(self):
         ch = [[] for _ in range(self.n)]
-        for s, d in zip(self.src, self.dst):
+        for s, d in zip(self.src, self.dst, strict=True):
             ch[s].append(int(d))
         return ch
 
@@ -109,7 +110,8 @@ def generate(seed, n_dc=60, n_dealer=600, jitter_dc=40.0, jitter_dealer=50.0):
     I0 = np.where(kind == DEALER, demand * dos, out * dos)
     I0[kind == SUP] = 2.0 * out[kind == SUP]
 
-    geoms = [LineString([tuple(xy[s]), tuple(xy[d])]) for s, d in zip(src, dst)]
+    geoms = [LineString([tuple(xy[s]), tuple(xy[d])])
+             for s, d in zip(src, dst, strict=True)]
     km = np.array([g.length for g in geoms]) * ROAD_FACTOR
     return Network(xy=xy, kind=kind, demand=demand, prod=prod, node_cap=node_cap, recv_cap=recv_cap,
                    I0=I0, src=src, dst=dst, km=km, tau=lane_tau(km),

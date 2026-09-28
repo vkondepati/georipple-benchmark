@@ -11,9 +11,10 @@ tau_e (+ optional stochastic delay) days. Dealers serve demand from on-hand
 stock; the first day demand is not fully met is the stockout day.
 """
 from dataclasses import dataclass
+
 import numpy as np
 
-from .network import SUP, DEALER
+from .network import DEALER, SUP
 
 
 @dataclass

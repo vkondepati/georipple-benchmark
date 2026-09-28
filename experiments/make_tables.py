@@ -38,6 +38,8 @@ def cell(stat, fmt):
     if not np.isfinite(stat["mean"]):
         return "--"
     lo, hi = stat["ci95"]
+    if not np.isfinite(lo):
+        return fmt.format(stat["mean"])
     return f"{fmt.format(stat['mean'])} [{fmt.format(lo)}, {fmt.format(hi)}]"
 
 
@@ -54,19 +56,20 @@ def main():
     summary = {"n_runs": n, "n_seed_clusters": n_seeds,
                "prediction": {}, "resolution": {}}
 
-    lines = [r"\begin{table}[t]",
-             r"\caption{Stockout prediction versus realized outcome "
-             rf"(mean [95\% CI], clustered by network seed; {n} runs, {n_seeds} seeds)}}",
+    pred_caption = (r"\caption{Stockout prediction versus realized outcome "
+                    rf"(mean [95\% CI], clustered by network seed; {n} runs, "
+                    rf"{n_seeds} seeds)}}")
+    lines = [r"\begin{table}[t]", pred_caption,
              r"\label{tab:pred}", r"\centering", r"\small\setlength{\tabcolsep}{2pt}",
              r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lcccc@{}}", r"\toprule",
              r"Method & Prec.$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\", r"\midrule"]
     for key, label in PRED_ROWS:
-        p = clustered_stats(runs, lambda r: r["prediction"][key]["precision"])
-        rc = clustered_stats(runs, lambda r: r["prediction"][key]["recall"])
-        br = clustered_stats(runs, lambda r: r["prediction"][key]["brier"])
-        mae = clustered_stats(runs, lambda r: r["prediction"][key]["mae_days"])
+        p = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["precision"])
+        rc = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["recall"])
+        br = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["brier"])
+        mae = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["mae_days"])
         mae_tp = clustered_stats(
-            runs, lambda r: r["prediction"][key]["mae_days_true_positive"])
+            runs, lambda r, key=key: r["prediction"][key]["mae_days_true_positive"])
         summary["prediction"][key] = {
             "precision": p, "recall": rc, "brier": br, "mae_days": mae,
             "mae_days_true_positive": mae_tp,
@@ -75,36 +78,39 @@ def main():
         if p["n_runs"] != n:
             ptxt += f"$^{{[{p['n_runs']}]}}$"
         lines.append(f"{label} & {ptxt} & {cell(rc, '{:.2f}')} & "
-                     f"{cell(br, '{:.3f}')} & {cell(mae, '{:.1f}')} \\")
-    lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}",
-              r"\parbox{\linewidth}{\footnotesize $^{\dagger}$Runs without a positive "
-              r"prediction are excluded; bracketed superscript gives the included count.}",
+                     f"{cell(br, '{:.3f}')} & {cell(mae, '{:.1f}')} \\\\")
+    precision_note = (r"\parbox{\linewidth}{\footnotesize $^{\dagger}$Runs without a "
+                      r"positive prediction are excluded; bracketed superscript gives the "
+                      r"included count.}")
+    lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}", precision_note,
               r"\end{table}", ""]
 
-    lines += [r"\begin{table}[t]",
-              r"\caption{Resolution quality under realized hazards "
-              rf"(mean [95\% CI], clustered by network seed; {n} runs, {n_seeds} seeds)}}",
+    resolution_caption = (r"\caption{Resolution quality under realized hazards "
+                          rf"(mean [95\% CI], clustered by network seed; {n} runs, "
+                          rf"{n_seeds} seeds)}}")
+    lines += [r"\begin{table}[t]", resolution_caption,
               r"\label{tab:resolve}", r"\centering", r"\small\setlength{\tabcolsep}{1.5pt}",
               r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lccccc@{}}", r"\toprule",
               r"Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (\$k)\\",
               r"\midrule"]
     for key, label in RES_ROWS:
-        fr = clustered_stats(runs, lambda r: r["resolution"][key]["fill_rate"])
-        um = clustered_stats(runs, lambda r: r["resolution"][key]["unmet_units"])
+        fr = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["fill_rate"])
+        um = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["unmet_units"])
         rr = clustered_stats(
-            runs, lambda r: float(r["resolution"][key]["ttr95_recovered"]))
-        tt = clustered_stats(runs, lambda r: r["resolution"][key]["ttr95_days"])
-        co = clustered_stats(runs, lambda r: r["resolution"][key]["cost_k"])
+            runs, lambda r, key=key: float(r["resolution"][key]["ttr95_recovered"]))
+        tt = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["ttr95_days"])
+        co = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["cost_k"])
         summary["resolution"][key] = {
             "fill_rate": fr, "unmet_units": um, "recovery_rate": rr,
             "ttr95_days": tt, "cost_k": co,
         }
         lines.append(f"{label} & {cell(fr, '{:.3f}')} & {cell(um, '{:.0f}')} & "
                      f"{cell(rr, '{:.0%}')} & {cell(tt, '{:.1f}')} & "
-                     f"{cell(co, '{:.1f}')} \\")
-    lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}",
-              r"\parbox{\linewidth}{\footnotesize $^{\ddagger}$Among runs with observed "
-              r"recovery; Recovery is the fraction recovering within the horizon.}",
+                     f"{cell(co, '{:.1f}')} \\\\")
+    recovery_note = (r"\parbox{\linewidth}{\footnotesize $^{\ddagger}$Among runs with "
+                     r"observed recovery; Recovery is the fraction recovering within the "
+                     r"horizon.}")
+    lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}", recovery_note,
               r"\end{table}"]
 
     lat = [r["latency_seconds_full"] for r in runs]

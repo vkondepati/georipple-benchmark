@@ -1,10 +1,9 @@
 """Ground-truth execution and evaluation metrics."""
 import numpy as np
 
-from .hazards import node_exposure, edge_exposure
-from .network import DEALER
+from .hazards import edge_exposure, node_exposure
 from .resolve import UNIT_COST_PER_KM
-from .simulate import Lanes, simulate, initial_pipeline
+from .simulate import Lanes, initial_pipeline, simulate
 
 DELAY_RATE = 0.3   # mean extra days per shipment (Poisson) in ground truth
 
@@ -17,10 +16,11 @@ def _cand_delays(cand, seed, T):
     if not len(cand):
         return np.zeros((0, T), int)
     return np.vstack([np.random.default_rng([seed, 11, s, d]).poisson(DELAY_RATE, T)
-                      for s, d in zip(cand.src, cand.dst)])
+                      for s, d in zip(cand.src, cand.dst, strict=True)])
 
 
-def execute_truth(net, h_real, T, seed, cand=None, S_exist=None, S_cand=None, y=None):
+def execute_truth(net, h_real, T, seed, cand=None, S_exist=None, S_cand=None,
+                  y=None, baseline_shipped=None):
     """Run the higher-fidelity simulator (realized hazard + stochastic delays)."""
     xn = node_exposure(net.xy, h_real, T)
     xe = edge_exposure(net.geoms, h_real, T)
@@ -39,12 +39,15 @@ def execute_truth(net, h_real, T, seed, cand=None, S_exist=None, S_cand=None, y=
         xe_all, S, delays = xe, S_exist, d_exist
     r = simulate(net, lanes, xn, xe_all, S, T, pipe=initial_pipeline(net, T), delays=delays)
     cost = 0.0
+    E = len(net.src)
+    if baseline_shipped is not None:
+        extra = np.maximum(r.shipped[:E] - baseline_shipped, 0.0)
+        cost += float((extra * UNIT_COST_PER_KM * net.km[:, None]).sum())
     if cand is not None and len(cand):
-        E = len(net.src)
         _, _, ckm, _, _ = cand.arrays()
         activated = y if y is not None else r.shipped[E:].sum(1) > 0
-        cost = float((cand.fixed_cost * activated).sum()
-                     + (r.shipped[E:].sum(1) * UNIT_COST_PER_KM * ckm).sum())
+        cost += float((cand.fixed_cost * activated).sum()
+                      + (r.shipped[E:].sum(1) * UNIT_COST_PER_KM * ckm).sum())
     return r, cost
 
 
@@ -91,4 +94,4 @@ def resolution_metrics(net, r, affected, h_real, T, cost):
     return {"fill_rate": fill, "unmet_units": unmet,
             "ttr95_days": max(ttr, 0.0) if recovered else np.nan,
             "ttr95_recovered": bool(recovered),
-            "cost_k": cost / 1000.0, "n_affected": int(len(A))}
+            "cost_k": cost / 1000.0, "n_affected": len(A)}
