@@ -2,6 +2,7 @@ import os
 import sys
 
 import numpy as np
+from shapely.geometry import LineString
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -10,7 +11,8 @@ from georipple.hazards import Hazard, base_hazards, node_exposure, edge_exposure
 from georipple.routing import HazardRouter                         # noqa: E402
 from georipple.resolve import Candidates, execution_schedule, plan_milp  # noqa: E402
 from georipple.predict import stci                                 # noqa: E402
-from georipple.simulate import (Lanes, simulate, existing_lanes, baseline_schedule,  # noqa: E402
+from georipple.evaluate import execute_truth, resolution_metrics   # noqa: E402
+from georipple.simulate import (Lanes, SimResult, simulate, existing_lanes, baseline_schedule,  # noqa: E402
                                 initial_pipeline)
 
 T = 21
@@ -91,3 +93,24 @@ def test_stci_attributes_last_mile_exposure_to_parent_facility():
     dar = np.array([[0.0, 0.0, 2.0]])
     score = stci(net, [(xn, xe)], dar)
     assert score[1] > 0.0
+
+
+def test_activated_lane_incurs_fixed_cost_without_flow():
+    net = generate(0, n_dc=4, n_dealer=8)
+    cand = Candidates()
+    s, d = int(np.where(net.kind == 1)[0][0]), int(net.dealers[0])
+    cand.add(s, d, LineString([net.xy[s], net.xy[d]]), net.demand[d], "lateral")
+    h = Hazard("calm", base_hazards()[0].poly, T + 1, T + 1, 0.0)
+    _, cost = execute_truth(net, h, T, 0, cand,
+                            baseline_schedule(net, T), np.zeros((1, T)), np.array([True]))
+    assert cost == cand.fixed_cost[0]
+
+
+def test_ttr_is_censored_when_recovery_is_not_observed():
+    net = generate(0, n_dc=4, n_dealer=8)
+    served = np.zeros((net.n, T))
+    r = SimResult(served, np.full(net.n, T), np.zeros((len(net.src), T)))
+    affected = np.zeros(len(net.dealers), bool); affected[0] = True
+    metrics = resolution_metrics(net, r, affected, base_hazards()[0], T, 0.0)
+    assert np.isnan(metrics["ttr95_days"])
+    assert metrics["ttr95_recovered"] is False

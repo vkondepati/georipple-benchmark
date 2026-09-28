@@ -42,8 +42,8 @@ def execute_truth(net, h_real, T, seed, cand=None, S_exist=None, S_cand=None, y=
     if cand is not None and len(cand):
         E = len(net.src)
         _, _, ckm, _, _ = cand.arrays()
-        used = y & (r.shipped[E:].sum(1) > 0) if y is not None else r.shipped[E:].sum(1) > 0
-        cost = float((cand.fixed_cost * used).sum()
+        activated = y if y is not None else r.shipped[E:].sum(1) > 0
+        cost = float((cand.fixed_cost * activated).sum()
                      + (r.shipped[E:].sum(1) * UNIT_COST_PER_KM * ckm).sum())
     return r, cost
 
@@ -76,10 +76,13 @@ def resolution_metrics(net, r, affected, h_real, T, cost):
     unmet = float((dem[dl, None] - r.served[dl]).clip(0).sum())
     if len(A) == 0:
         return {"fill_rate": np.nan, "unmet_units": unmet, "ttr95_days": np.nan,
-                "cost_k": cost / 1000.0, "n_affected": 0}
+                "ttr95_recovered": False, "cost_k": cost / 1000.0, "n_affected": 0}
     fill = float(r.served[A].sum() / (dem[A].sum() * T))
     daily = r.served[A].sum(0) / dem[A].sum()
     bad = np.where(daily < 0.95)[0]
+    recovered = len(bad) == 0 or bad.max() < T - 1
     ttr = 0.0 if len(bad) == 0 else float(bad.max() + 1 - h_real.start)
-    return {"fill_rate": fill, "unmet_units": unmet, "ttr95_days": max(ttr, 0.0),
+    return {"fill_rate": fill, "unmet_units": unmet,
+            "ttr95_days": max(ttr, 0.0) if recovered else np.nan,
+            "ttr95_recovered": bool(recovered),
             "cost_k": cost / 1000.0, "n_affected": int(len(A))}

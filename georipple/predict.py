@@ -14,7 +14,7 @@ def ensemble_exposures(net, ens, T):
 def predict_wavefront(net, exps, T, use_edges=True, use_buffers=True):
     """Deterministic Algorithm-1 simulation per forecast member.
 
-    Returns (P[stockout by T], median stockout day, per-member DaR per node).
+    Returns (P[stockout by T], expected stockout day, per-member DaR per node).
     """
     lanes, S, pipe = existing_lanes(net), baseline_schedule(net, T), initial_pipeline(net, T)
     I0 = net.I0 if use_buffers else np.zeros(net.n)
@@ -25,7 +25,7 @@ def predict_wavefront(net, exps, T, use_edges=True, use_buffers=True):
         sig.append(r.sigma)
         dar.append((net.demand[:, None] - r.served).clip(0).sum(1) * (net.kind == DEALER))
     sig = np.array(sig)
-    return (sig < T).mean(0), np.median(sig, 0), np.array(dar)
+    return (sig < T).mean(0), sig.mean(0), np.array(dar)
 
 
 def predict_topology_only(net, ens, T):
