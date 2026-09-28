@@ -63,17 +63,20 @@ def prediction_metrics(net, p, sig_hat, sigma_true, T, truth_mask):
     truth = truth_mask
     pred = p[dl] >= 0.5
     tp = (truth & pred).sum()
-    precision = tp / pred.sum() if pred.sum() else np.nan
-    recall = tp / truth.sum() if truth.sum() else np.nan
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else np.nan
+    precision = float(tp / pred.sum()) if pred.sum() else None
+    recall = float(tp / truth.sum()) if truth.sum() else None
+    f1 = (2 * precision * recall / (precision + recall)
+          if precision is not None and recall is not None and precision + recall > 0
+          else None)
     brier = float(np.mean((p[dl] - truth) ** 2))
     union = truth | pred
     s_hat = np.where(pred, np.minimum(sig_hat[dl], T), T)
-    mae = float(np.abs(s_hat[union] - np.minimum(sigma_true[dl][union], T)).mean()) if union.any() else np.nan
+    mae = (float(np.abs(s_hat[union] - np.minimum(sigma_true[dl][union], T)).mean())
+           if union.any() else None)
     tp_mask = truth & pred
     mae_tp = float(np.abs(sig_hat[dl][tp_mask] - sigma_true[dl][tp_mask]).mean()) \
-        if tp_mask.any() else np.nan
-    return {"precision": float(precision), "recall": float(recall), "f1": float(f1),
+        if tp_mask.any() else None
+    return {"precision": precision, "recall": recall, "f1": f1,
             "brier": brier, "mae_days": mae, "mae_days_true_positive": mae_tp,
             "n_true": int(truth.sum()), "n_pred": int(pred.sum())}
 
@@ -84,7 +87,7 @@ def resolution_metrics(net, r, affected, h_real, T, cost):
     dem = net.demand
     unmet = float((dem[dl, None] - r.served[dl]).clip(0).sum())
     if len(A) == 0:
-        return {"fill_rate": np.nan, "unmet_units": unmet, "ttr95_days": np.nan,
+        return {"fill_rate": None, "unmet_units": unmet, "ttr95_days": None,
                 "ttr95_recovered": False, "cost_k": cost / 1000.0, "n_affected": 0}
     fill = float(r.served[A].sum() / (dem[A].sum() * T))
     daily = r.served[A].sum(0) / dem[A].sum()
@@ -92,6 +95,6 @@ def resolution_metrics(net, r, affected, h_real, T, cost):
     recovered = len(bad) == 0 or bad.max() < T - 1
     ttr = 0.0 if len(bad) == 0 else float(bad.max() + 1 - h_real.start)
     return {"fill_rate": fill, "unmet_units": unmet,
-            "ttr95_days": max(ttr, 0.0) if recovered else np.nan,
+            "ttr95_days": max(ttr, 0.0) if recovered else None,
             "ttr95_recovered": bool(recovered),
             "cost_k": cost / 1000.0, "n_affected": len(A)}

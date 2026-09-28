@@ -4,12 +4,12 @@
  "n_predicted": 29,
  "n_exposed_lanes": 45,
  "activated": {
-  "lateral": 16,
+  "lateral": 18,
   "alt_source": 0
  },
- "cost_k": 24.22297792286692,
+ "cost_k": 27.15036353744072,
  "unmet_none": 1234.3450749085955,
- "unmet_plan": 651.1019652003056,
- "dealers_improved": 29,
- "dealers_worse": 1
+ "unmet_plan": 1184.8611033253467,
+ "dealers_improved": 14,
+ "dealers_worse": 21
 }

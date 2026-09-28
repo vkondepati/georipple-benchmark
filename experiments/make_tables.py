@@ -14,7 +14,7 @@ RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Budget-matched greedy"),
             ("Full", "GeoRipple (full)")]
 
 
-def clustered_stats(runs, getter):
+def clustered_stats(runs, getter, bounds=None):
     """Mean and t interval over per-seed means; hazards are fixed strata."""
     groups = {}
     for run in runs:
@@ -23,24 +23,33 @@ def clustered_stats(runs, getter):
             groups.setdefault(run["seed"], []).append(float(value))
     cluster_means = np.array([np.mean(v) for v in groups.values()], float)
     if not len(cluster_means):
-        return {"mean": np.nan, "ci95": [np.nan, np.nan], "n_runs": 0, "n_seeds": 0}
+        return {"mean": None, "ci95": [None, None], "n_records": 0, "n_seeds": 0}
     mean = float(cluster_means.mean())
     if len(cluster_means) > 1:
         margin = float(student_t.ppf(0.975, len(cluster_means) - 1)
                        * cluster_means.std(ddof=1) / np.sqrt(len(cluster_means)))
     else:
-        margin = np.nan
-    return {"mean": mean, "ci95": [mean - margin, mean + margin],
-            "n_runs": int(sum(map(len, groups.values()))), "n_seeds": len(cluster_means)}
+        margin = None
+    interval = [mean - margin, mean + margin] if margin is not None else [None, None]
+    if bounds is not None and margin is not None:
+        interval = [float(np.clip(x, *bounds)) for x in interval]
+    return {"mean": mean, "ci95": interval,
+            "n_records": int(sum(map(len, groups.values()))), "n_seeds": len(cluster_means)}
 
 
 def cell(stat, fmt):
-    if not np.isfinite(stat["mean"]):
+    if stat["mean"] is None or not np.isfinite(stat["mean"]):
         return "--"
     lo, hi = stat["ci95"]
-    if not np.isfinite(lo):
+    if lo is None or not np.isfinite(lo):
         return fmt.format(stat["mean"])
     return f"{fmt.format(stat['mean'])} [{fmt.format(lo)}, {fmt.format(hi)}]"
+
+
+def finite_mean(values):
+    values = [float(value) for value in values
+              if value is not None and np.isfinite(value)]
+    return float(np.mean(values)) if values else None
 
 
 def main():
@@ -53,20 +62,23 @@ def main():
     runs = data["runs"]
     n = len(runs)
     n_seeds = len({r["seed"] for r in runs})
-    summary = {"n_runs": n, "n_seed_clusters": n_seeds,
+    summary = {"n_records": n, "n_seed_clusters": n_seeds,
                "prediction": {}, "resolution": {}}
 
     pred_caption = (r"\caption{Stockout prediction versus realized outcome "
-                    rf"(mean [95\% CI], clustered by network seed; {n} runs, "
+                    rf"(mean [95\% CI], clustered by network seed; {n} records, "
                     rf"{n_seeds} seeds)}}")
     lines = [r"\begin{table}[t]", pred_caption,
              r"\label{tab:pred}", r"\centering", r"\small\setlength{\tabcolsep}{2pt}",
              r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lcccc@{}}", r"\toprule",
              r"Method & Prec.$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\", r"\midrule"]
     for key, label in PRED_ROWS:
-        p = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["precision"])
-        rc = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["recall"])
-        br = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["brier"])
+        p = clustered_stats(
+            runs, lambda r, key=key: r["prediction"][key]["precision"], (0, 1))
+        rc = clustered_stats(
+            runs, lambda r, key=key: r["prediction"][key]["recall"], (0, 1))
+        br = clustered_stats(
+            runs, lambda r, key=key: r["prediction"][key]["brier"], (0, 1))
         mae = clustered_stats(runs, lambda r, key=key: r["prediction"][key]["mae_days"])
         mae_tp = clustered_stats(
             runs, lambda r, key=key: r["prediction"][key]["mae_days_true_positive"])
@@ -75,18 +87,18 @@ def main():
             "mae_days_true_positive": mae_tp,
         }
         ptxt = cell(p, "{:.2f}")
-        if p["n_runs"] != n:
-            ptxt += f"$^{{[{p['n_runs']}]}}$"
+        if p["n_records"] != n:
+            ptxt += f"$^{{[{p['n_records']}]}}$"
         lines.append(f"{label} & {ptxt} & {cell(rc, '{:.2f}')} & "
                      f"{cell(br, '{:.3f}')} & {cell(mae, '{:.1f}')} \\\\")
-    precision_note = (r"\parbox{\linewidth}{\footnotesize $^{\dagger}$Runs without a "
+    precision_note = (r"\parbox{\linewidth}{\footnotesize $^{\dagger}$Records without a "
                       r"positive prediction are excluded; bracketed superscript gives the "
                       r"included count.}")
     lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}", precision_note,
               r"\end{table}", ""]
 
     resolution_caption = (r"\caption{Resolution quality under realized hazards "
-                          rf"(mean [95\% CI], clustered by network seed; {n} runs, "
+                          rf"(mean [95\% CI], clustered by network seed; {n} records, "
                           rf"{n_seeds} seeds)}}")
     lines += [r"\begin{table}[t]", resolution_caption,
               r"\label{tab:resolve}", r"\centering", r"\small\setlength{\tabcolsep}{1.5pt}",
@@ -94,20 +106,23 @@ def main():
               r"Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (\$k)\\",
               r"\midrule"]
     for key, label in RES_ROWS:
-        fr = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["fill_rate"])
+        fr = clustered_stats(
+            runs, lambda r, key=key: r["resolution"][key]["fill_rate"], (0, 1))
         um = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["unmet_units"])
         rr = clustered_stats(
-            runs, lambda r, key=key: float(r["resolution"][key]["ttr95_recovered"]))
+            runs, lambda r, key=key: float(r["resolution"][key]["ttr95_recovered"]),
+            (0, 1))
         tt = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["ttr95_days"])
         co = clustered_stats(runs, lambda r, key=key: r["resolution"][key]["cost_k"])
         summary["resolution"][key] = {
             "fill_rate": fr, "unmet_units": um, "recovery_rate": rr,
             "ttr95_days": tt, "cost_k": co,
         }
+        recovery = cell(rr, "{:.0%}").replace("%", r"\%")
         lines.append(f"{label} & {cell(fr, '{:.3f}')} & {cell(um, '{:.0f}')} & "
-                     f"{cell(rr, '{:.0%}')} & {cell(tt, '{:.1f}')} & "
+                     f"{recovery} & {cell(tt, '{:.1f}')} & "
                      f"{cell(co, '{:.1f}')} \\\\")
-    recovery_note = (r"\parbox{\linewidth}{\footnotesize $^{\ddagger}$Among runs with "
+    recovery_note = (r"\parbox{\linewidth}{\footnotesize $^{\ddagger}$Among records with "
                      r"observed recovery; Recovery is the fraction recovering within the "
                      r"horizon.}")
     lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}", recovery_note,
@@ -120,11 +135,11 @@ def main():
     for hz in sorted({r["hazard"] for r in runs}):
         sub = [r for r in runs if r["hazard"] == hz]
         summary["per_hazard"][hz] = {
-            "recall": {k: float(np.nanmean([r["prediction"][k]["recall"] for r in sub]))
+            "recall": {k: finite_mean(r["prediction"][k]["recall"] for r in sub)
                        for k, _ in PRED_ROWS},
-            "fill_rate": {k: float(np.nanmean([r["resolution"][k]["fill_rate"] for r in sub]))
+            "fill_rate": {k: finite_mean(r["resolution"][k]["fill_rate"] for r in sub)
                           for k, _ in RES_ROWS},
-            "unmet_units": {k: float(np.mean([r["resolution"][k]["unmet_units"] for r in sub]))
+            "unmet_units": {k: finite_mean(r["resolution"][k]["unmet_units"] for r in sub)
                             for k, _ in RES_ROWS},
         }
     plan_changes = {(r["seed"], r["hazard"]): r["stci_top_changed_lambda0"] for r in runs}
@@ -150,10 +165,14 @@ def main():
     }
 
     os.makedirs(a.outdir, exist_ok=True)
-    with open(os.path.join(a.outdir, "tables.tex"), "w") as f:
+    tables_path = os.path.join(a.outdir, "tables.tex")
+    with open(tables_path + ".tmp", "w") as f:
         f.write("\n".join(lines) + "\n")
-    with open(os.path.join(a.outdir, "summary.json"), "w") as f:
-        json.dump(summary, f, indent=1)
+    os.replace(tables_path + ".tmp", tables_path)
+    summary_path = os.path.join(a.outdir, "summary.json")
+    with open(summary_path + ".tmp", "w") as f:
+        json.dump(summary, f, indent=1, allow_nan=False)
+    os.replace(summary_path + ".tmp", summary_path)
     print("\n".join(lines))
     print(json.dumps({k: summary[k] for k in (
         "latency_seconds_full", "per_hazard", "paired_effects",

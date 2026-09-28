@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 from importlib.metadata import version
+from pathlib import Path
 
 import numpy as np
 
@@ -40,7 +41,26 @@ from georipple.routing import HazardRouter
 from georipple.simulate import initial_pipeline
 
 PLAN_QUANTILE = 0.75
-PACKAGES = ("numpy", "scipy", "shapely", "networkx")
+LOCK_FILE = Path(__file__).resolve().parents[1] / "requirements.lock"
+
+
+def locked_packages():
+    return tuple(line.split("==", 1)[0] for line in LOCK_FILE.read_text().splitlines()
+                 if "==" in line and not line.startswith((" ", "#")))
+
+
+def positive_int(value):
+    value = int(value)
+    if value < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return value
+
+
+def positive_float(value):
+    value = float(value)
+    if value <= 0:
+        raise argparse.ArgumentTypeError("must be greater than 0")
+    return value
 
 
 def provenance():
@@ -49,7 +69,7 @@ def provenance():
     dirty = bool(subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
                                 capture_output=True, text=True, check=False).stdout.strip())
     return {"python": platform.python_version(), "platform": platform.platform(),
-            "packages": {name: version(name) for name in PACKAGES},
+            "packages": {name: version(name) for name in locked_packages()},
             "git_commit": commit, "git_dirty": dirty}
 
 
@@ -155,21 +175,21 @@ def run(seeds, T, K, time_limit, M, truth_reps=3):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--seeds", type=int, default=5)
-    ap.add_argument("--horizon", type=int, default=28)
-    ap.add_argument("--top-k", type=int, default=10)
-    ap.add_argument("--members", type=int, default=8)
-    ap.add_argument("--truth-reps", type=int, default=3)
-    ap.add_argument("--time-limit", type=float, default=60.0)
+    ap.add_argument("--seeds", type=positive_int, default=5)
+    ap.add_argument("--horizon", type=positive_int, default=28)
+    ap.add_argument("--top-k", type=positive_int, default=10)
+    ap.add_argument("--members", type=positive_int, default=8)
+    ap.add_argument("--truth-reps", type=positive_int, default=3)
+    ap.add_argument("--time-limit", type=positive_float, default=60.0)
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "results", "runs.json"))
     a = ap.parse_args()
     runs = run(a.seeds, a.horizon, a.top_k, a.time_limit, a.members, a.truth_reps)
-    os.makedirs(os.path.dirname(a.out), exist_ok=True)
+    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     config = {k: v for k, v in vars(a).items() if k != "out"}
     tmp = a.out + ".tmp"
     with open(tmp, "w") as f:
         json.dump({"config": config, "provenance": provenance(), "runs": runs},
-                  f, indent=1, default=float)
+                  f, indent=1, default=float, allow_nan=False)
     os.replace(tmp, a.out)
     print("wrote", a.out)
 

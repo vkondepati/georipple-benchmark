@@ -1,8 +1,9 @@
 PYTHON ?= python3
+TECTONIC ?= tectonic
 
-.PHONY: install test bench tables figures all
+.PHONY: install test bench tables figures paper check all
 install:
-	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements.lock
 test:
 	$(PYTHON) -m pytest -q tests
 bench:
@@ -11,4 +12,8 @@ tables:
 	$(PYTHON) experiments/make_tables.py
 figures:
 	$(PYTHON) experiments/make_figures.py --seed 0 --hazard 0
-all: test bench tables figures
+paper:
+	cd paper && $(TECTONIC) georipple_paper.tex
+check: test
+	$(PYTHON) -m compileall -q georipple experiments tests
+all: check bench tables figures

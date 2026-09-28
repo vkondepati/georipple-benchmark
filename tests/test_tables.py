@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
 
-from make_tables import clustered_stats
+from make_tables import cell, clustered_stats, finite_mean
 
 
 def test_clustered_stats_uses_seed_as_independent_unit():
@@ -15,6 +15,23 @@ def test_clustered_stats_uses_seed_as_independent_unit():
     ]
     stat = clustered_stats(runs, lambda r: r["value"])
     assert stat["mean"] == pytest.approx(4.0)
-    assert stat["n_runs"] == 4
+    assert stat["n_records"] == 4
     assert stat["n_seeds"] == 2
     assert stat["ci95"][0] < stat["mean"] < stat["ci95"][1]
+
+
+def test_clustered_stats_clips_bounded_confidence_interval():
+    runs = [{"seed": i, "value": value}
+            for i, value in enumerate([0.8, 0.9, 1.0, 1.0, 1.0])]
+    stat = clustered_stats(runs, lambda r: r["value"], bounds=(0, 1))
+    assert stat["ci95"][1] == 1.0
+
+
+def test_percentage_cells_can_be_escaped_for_latex():
+    stat = {"mean": 0.9, "ci95": [0.8, 1.0]}
+    assert cell(stat, "{:.0%}").replace("%", r"\%") == r"90\% [80\%, 100\%]"
+
+
+def test_finite_mean_ignores_missing_values():
+    assert finite_mean([None, 1.0, 3.0]) == 2.0
+    assert finite_mean([None]) is None

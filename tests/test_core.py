@@ -162,7 +162,7 @@ def test_ttr_is_censored_when_recovery_is_not_observed():
     r = SimResult(served, np.full(net.n, T), np.zeros((len(net.src), T)))
     affected = np.zeros(len(net.dealers), bool); affected[0] = True
     metrics = resolution_metrics(net, r, affected, base_hazards()[0], T, 0.0)
-    assert np.isnan(metrics["ttr95_days"])
+    assert metrics["ttr95_days"] is None
     assert metrics["ttr95_recovered"] is False
 
 
