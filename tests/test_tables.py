@@ -6,6 +6,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
 
 from make_tables import cell, clustered_stats, finite_mean, load_runs
+from check_artifacts import validate_runs
 
 
 def test_clustered_stats_uses_seed_as_independent_unit():
@@ -42,3 +43,21 @@ def test_load_runs_rejects_empty_artifact(tmp_path):
     path.write_text('{"runs": []}')
     with pytest.raises(ValueError, match="non-empty 'runs' list"):
         load_runs(path)
+
+
+def test_validate_runs_requires_complete_clean_artifact(tmp_path):
+    path = tmp_path / "runs.json"
+    payload = {
+        "config": {"seeds": 1, "truth_reps": 2},
+        "provenance": {"git_dirty": False},
+        "runs": [
+            {"hazard": "flood"},
+            {"hazard": "flood"},
+            {"hazard": "storm"},
+            {"hazard": "storm"},
+        ],
+    }
+    validate_runs(payload, path)
+    payload["provenance"]["git_dirty"] = True
+    with pytest.raises(SystemExit, match="non-clean provenance"):
+        validate_runs(payload, path)

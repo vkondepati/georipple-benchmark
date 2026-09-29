@@ -1,25 +1,25 @@
 \begin{table}[t]
-\caption{Stockout prediction versus realized outcome (mean [descriptive 95\% seed-clustered t interval]; 45 records, 5 seeds)}
+\caption{Stockout prediction versus realized outcome (mean [descriptive 95\% seed-clustered t interval]; 90 records, 10 seeds)}
 \label{tab:pred}
 \centering
 \small\setlength{\tabcolsep}{2pt}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-Method & Prec.$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\
+Method & Precision$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\
 \midrule
-B1 Topology-only & 0.42 [0.36, 0.48] & 0.93 [0.85, 1.00] & 0.067 [0.061, 0.074] & 18.3 [17.3, 19.3] \\
-B2 Node-only spatial & 0.97 [0.92, 1.00] & 0.57 [0.48, 0.66] & 0.014 [0.010, 0.019] & 9.2 [7.7, 10.6] \\
-A1 No buffers & 0.41 [0.35, 0.47] & 0.99 [0.97, 1.00] & 0.064 [0.055, 0.074] & 16.1 [14.9, 17.3] \\
-GeoRipple (full) & 0.96 [0.91, 1.00] & 0.65 [0.57, 0.74] & 0.013 [0.009, 0.018] & 7.9 [6.5, 9.3] \\
+B1 Topology-only & 0.39 [0.32, 0.46] & 0.88 [0.80, 0.96] & 0.069 [0.062, 0.077] & 19.1 [18.2, 20.0] \\
+B2 Node-only spatial & 0.85 [0.78, 0.92] & 0.52 [0.45, 0.59] & 0.018 [0.014, 0.022] & 10.1 [9.3, 11.0] \\
+A1 No buffers & 0.39 [0.32, 0.45] & 0.98 [0.94, 1.00] & 0.066 [0.058, 0.074] & 16.5 [15.5, 17.5] \\
+GeoRipple (full) & 0.86 [0.79, 0.92] & 0.60 [0.51, 0.68] & 0.017 [0.013, 0.022] & 9.3 [8.4, 10.1] \\
 \bottomrule
 \end{tabular}}
 \vspace{2pt}
-\parbox{\linewidth}{\footnotesize $^{\dagger}$Records without a positive prediction are excluded; bracketed superscript gives the included count.}
+\parbox{\linewidth}{\footnotesize $^{\dagger}$Undefined precision (no positive prediction) is excluded; $[n]$ gives the included count when below the total.}
 \end{table}
 
 \begin{table}[t]
-\caption{Resolution quality under realized hazards (mean [descriptive 95\% seed-clustered t interval]; 45 records, 5 seeds)}
+\caption{Resolution quality under realized hazards (mean [descriptive 95\% seed-clustered t interval]; 90 records, 10 seeds)}
 \label{tab:resolve}
 \centering
 \small\setlength{\tabcolsep}{1.5pt}
@@ -28,11 +28,12 @@ GeoRipple (full) & 0.96 [0.91, 1.00] & 0.65 [0.57, 0.74] & 0.013 [0.009, 0.018] 
 \toprule
 Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (kCU)\\
 \midrule
-No action & 0.856 [0.840, 0.872] & 1027 [895, 1159] & 98\% [92\%, 100\%] & 19.8 [18.6, 21.1] & 0.0 [0.0, 0.0] \\
-B3 Action-count-matched greedy & 0.904 [0.895, 0.912] & 1032 [745, 1319] & 82\% [57\%, 100\%] & 17.4 [15.6, 19.2] & 21.2 [15.4, 27.0] \\
-A2 No hazard routing & 0.888 [0.880, 0.896] & 864 [742, 985] & 96\% [88\%, 100\%] & 20.7 [20.4, 21.0] & 17.4 [13.0, 21.8] \\
-A3 $\lambda=0$ & 0.894 [0.885, 0.903] & 826 [733, 918] & 96\% [88\%, 100\%] & 20.7 [20.3, 21.1] & 17.7 [11.0, 24.4] \\
-GeoRipple (full) & 0.894 [0.885, 0.903] & 826 [733, 918] & 96\% [88\%, 100\%] & 20.7 [20.3, 21.1] & 17.7 [11.0, 24.4] \\
+No action & 0.860 [0.840, 0.880] & 899 [657, 1140] & 93\% [88\%, 99\%] & 20.4 [19.6, 21.3] & 0.0 [0.0, 0.0] \\
+B3 Action-count-matched greedy & 0.896 [0.880, 0.913] & 970 [794, 1145] & 82\% [71\%, 93\%] & 20.0 [18.6, 21.3] & 16.7 [11.8, 21.5] \\
+B4 Mean-exposure MILP & 0.870 [0.853, 0.888] & 868 [650, 1087] & 92\% [86\%, 99\%] & 21.1 [20.4, 21.8] & 7.3 [4.8, 9.8] \\
+A2 No hazard routing & 0.861 [0.852, 0.870] & 1067 [897, 1237] & 92\% [86\%, 99\%] & 21.5 [20.8, 22.2] & 14.9 [11.6, 18.2] \\
+A3 $\lambda=0$ & 0.863 [0.852, 0.875] & 1053 [879, 1226] & 92\% [86\%, 99\%] & 21.5 [20.8, 22.2] & 13.9 [9.7, 18.2] \\
+GeoRipple (full) & 0.863 [0.852, 0.875] & 1053 [879, 1226] & 92\% [86\%, 99\%] & 21.5 [20.8, 22.2] & 13.9 [9.7, 18.2] \\
 \bottomrule
 \end{tabular}}
 \vspace{2pt}

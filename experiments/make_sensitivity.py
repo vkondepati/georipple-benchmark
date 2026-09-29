@@ -25,11 +25,14 @@ def main():
     ap.add_argument("--outdir", default=os.path.join(HERE, "..", "results"))
     args = ap.parse_args()
     runs = load_runs(args.runs)
-    config_order = [config["id"] for config in json.load(open(args.runs))["configs"]]
-    summary = {"n_records": len(runs), "configs": {}}
+    with open(args.runs) as f:
+        payload = json.load(f)
+    config_order = [config["id"] for config in payload["configs"]]
+    n_seeds = len({run["seed"] for run in runs})
+    summary = {"n_records": len(runs), "n_seed_clusters": n_seeds, "configs": {}}
     lines = [
         r"\begin{table}[t]",
-        r"\caption{One-factor-at-a-time sensitivity (means over five seed clusters). "
+        rf"\caption{{One-factor-at-a-time sensitivity (means over {n_seeds} seed clusters). "
         r"$\Delta$ values are relative to paired no action.}",
         r"\label{tab:sensitivity}",
         r"\centering",

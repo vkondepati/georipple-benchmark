@@ -1,0 +1,20 @@
+\begin{table}[t]
+\caption{One-factor-at-a-time sensitivity (means over 5 seed clusters). $\Delta$ values are relative to paired no action.}
+\label{tab:sensitivity}
+\centering
+\small\setlength{\tabcolsep}{2pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Configuration & Recall & $\Delta$Unmet & $\Delta$Fill & Cost (kCU) & Actions\\
+\midrule
+Planning quantile $q=0.50$ & 0.63 & -63 & 0.021 & 11.2 & 7.3 \\
+Reference: $q=0.75$, $K=10$, $M=8$ & 0.63 & 98 & 0.013 & 17.5 & 10.9 \\
+Planning quantile $q=0.90$ & 0.63 & 299 & -0.004 & 20.6 & 12.9 \\
+Top-$K=5$ & 0.63 & 116 & 0.010 & 16.5 & 10.3 \\
+Top-$K=15$ & 0.63 & 98 & 0.013 & 17.5 & 10.9 \\
+Ensemble size $M=4$ & 0.73 & 43 & 0.015 & 16.5 & 10.5 \\
+Ensemble size $M=16$ & 0.65 & 142 & 0.012 & 19.0 & 11.8 \\
+\bottomrule
+\end{tabular}}
+\end{table}

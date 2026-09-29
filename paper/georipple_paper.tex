@@ -50,14 +50,18 @@ through spatial search, validating them with hazard-avoiding road routes,
 and selecting a mitigation plan with a time-expanded mixed-integer flow
 model. We describe the formulation, a Spatio-Topological Criticality
 Index (STCI), and a proposed linked graph--map deployment architecture.
-In an exploratory synthetic benchmark with five independently generated
-networks, three fixed hazard scenarios, and three execution-noise
-replicates, GeoRipple attains 0.96 precision, 0.65 recall, and a 7.9-day
-stockout-timing mean absolute error. Its plans reduce mean total unmet
-demand from 1{,}027 to 826 units (paired difference $-202$; seed-clustered
-descriptive 95\% t interval $[-357,-46]$) at a mean recovery cost of
-17.7k synthetic cost units (CU). The effect is not uniform across hazards, and the small number of
-independent network seeds makes these results preliminary.
+In an exploratory synthetic benchmark with ten independently generated
+networks, three fixed hazard families, and three execution-noise
+replicates, GeoRipple attains 0.86 precision, 0.60 recall, and a 9.3-day
+stockout-timing mean absolute error under independently perturbed held-out
+events. Lane geometry increases recall by 0.073 (descriptive 95\%
+seed-clustered t interval $[0.032,0.113]$). The prescriptive result is a
+negative one: the upper-quartile planner increases mean system-wide unmet
+demand from 899 to 1{,}053 units, whereas a mean-exposure MILP yields 868
+units. A 315-record sensitivity study identifies forecast aggregation as
+consequential and finds that only one of seven tested configurations lowers
+mean unmet demand. Thus the benchmark supports lane-aware prediction, but
+does not establish the proposed risk-averse resolution policy.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -117,7 +121,9 @@ contributions are:
   against a routing engine with the hazard polygon excluded, and selects
   a plan with a time-expanded mixed-integer flow model
   (Section~\ref{sec:resolve}).
-  \item \textbf{A reproducible synthetic evaluation} and a proposed
+  \item \textbf{A reproducible synthetic evaluation} with held-out hazard
+  perturbations, a stronger mean-exposure comparator, and parameter
+  sensitivity analysis, plus a proposed
   deployment architecture using graph, geospatial, routing, and linked-view
   components
   (Sections~\ref{sec:system}--\ref{sec:eval}).
@@ -127,6 +133,16 @@ The intended contribution is the closed loop from a geographic hazard feed,
 through topological and temporal propagation, back to a
 geographically validated repair plan, with both the problem and the
 solution shown on the same linked map and graph.
+
+We organize the empirical analysis around three research questions:
+\textbf{RQ1}, does modeling lane geometry and inventory time improve
+stockout prediction relative to topology-only, node-only, and no-buffer
+models? \textbf{RQ2}, does the upper-quartile time-expanded planner improve
+system-wide recovery relative to no action, an action-count-matched greedy
+policy, and a mean-exposure MILP? \textbf{RQ3}, how sensitive are prediction
+and recovery to forecast aggregation, ranking depth, ensemble size, and
+hazard-aware routing? These are evaluated as exploratory questions rather
+than confirmatory hypotheses.
 
 %% ---------------------------------------------------------------------
 \section{Related Work}
@@ -144,8 +160,24 @@ scoring misses \cite{simchilevi2014,simchilevi2015}. Sheffi and Rice
 \cite{sheffi2005} and Tang \cite{tang2006} frame resilience in terms of
 redundancy and flexibility. Digital supply-chain twins further couple
 network state, simulation, and disruption response
-\cite{ivanov2021twin,ivanov2025twins}. GeoRipple focuses more narrowly on
+\cite{ivanov2021twin,ivanov2025twins}. Recent work combines simulation,
+machine learning, and optimization for disrupted production--distribution
+systems \cite{corsini2024} and flood-driven recovery \cite{ogunsoto2025}; a
+systematic review nevertheless finds that large-sample and experimental
+validation remains limited \cite{liu2026}. GeoRipple focuses more narrowly on
 explicit node/lane geometry and geographically feasible repair actions.
+
+\subsection{Disaster Logistics Optimization}
+Humanitarian logistics models jointly consider damaged transport links,
+inventory placement, and post-event flow. For example, Zhang
+\textit{et al.} formulate pre-disaster road strengthening and inventory
+pre-positioning as two-stage distributionally robust optimization
+\cite{zhang2023}. This stream establishes that node and link uncertainty
+should be optimized jointly. GeoRipple differs in decision setting: it models
+a commercial network after a forecast is issued, predicts the delayed
+inventory-mediated ripple at individual demand points, and generates new
+lane candidates from explicit forecast geometry. The present synthetic
+benchmark is not comparable to the real-case validation in that literature.
 
 \subsection{Network-Structural Resilience}
 Kim \textit{et al.}~\cite{kim2015} show that the structure of a supply
@@ -173,11 +205,13 @@ predicates \cite{snowflakegeo}. These platforms provide the
 method for disruption propagation or resolution.
 
 \subsection{Gap}
-We are not aware of prior work that combines (i) hazard intersection
-with \emph{edges} as geometric lanes, (ii) buffer-aware temporal
-propagation to a per-node stockout time, and (iii) hazard-constrained
-spatial generation of repair lanes, inside a single linked graph--map
-analytic loop. GeoRipple targets this combination.
+Across these streams, prior work typically addresses subsets of (i) hazard
+intersection with \emph{edges} as geometric lanes, (ii) buffer-aware temporal
+propagation to a per-node stockout time, (iii) geometry-constrained generation
+of repair lanes, and (iv) linked graph--map explanation. GeoRipple targets
+their integration. We claim neither a new general robust-optimization theory
+nor an empirically validated digital twin; the contribution is the coupled
+method and its reproducible diagnostic benchmark.
 
 %% ---------------------------------------------------------------------
 \section{Problem Formulation}
@@ -485,8 +519,8 @@ predicted stockout day; gray dealers are not at risk.}
 \caption{Resolution view for the same run. Green lines are the 18
 lateral-transshipment lanes activated by the MILP; dealers are shaded by
 their change in fill rate versus no action under the realized footprint
-(blue outline). The plan reduced unmet demand from 1{,}234 to 1{,}185
-units at a cost of 27.2k CU; 14 dealers improved and 21 worsened by at
+(blue outline). The plan increased unmet demand from 865 to 1{,}265
+units at a cost of 27.1k CU; 3 dealers improved and 31 worsened by at
 least 0.5 percentage points. The
 redistribution of benefit is visible rather than hidden by the aggregate.}
 \label{fig:resolution}
@@ -515,13 +549,16 @@ a Mississippi River corridor flood (severity 1.0, days 3--14). They are
 not reconstructions of specific historical events. GeoRipple sees only a
 forecast ensemble of $M=8$ members, generated by perturbing each
 footprint's position, extent, timing, and severity. Ground truth comes
-from executing each plan under the unperturbed footprint with Poisson
-transit delays (mean 0.3 days per shipment). A stockout counts as
+from executing each plan under a separately seeded perturbation that is not a
+forecast member, with Poisson transit delays (mean 0.3 days per shipment).
+The held-out event is independent conditional on the hand-authored hazard
+family, so this tests within-family generalization rather than performance on
+a new hazard type. A stockout counts as
 \emph{hazard-attributable} only if it occurs earlier than in a paired
-no-hazard execution with the same delay draw. For each of five
+no-hazard execution with the same delay draw. For each of ten
 independently generated network seeds and three fixed hazards, we plan
-once and evaluate three delay draws, giving 45 evaluation records.
-Descriptive t intervals cluster these records by the five network seeds;
+once and evaluate three delay draws, giving 90 evaluation records.
+Descriptive t intervals cluster these records by the ten network seeds;
 hazards are fixed strata, not sampled events.
 
 \subsection{Baselines, Ablations, and Metrics}
@@ -532,7 +569,9 @@ exposure; and (B3) \emph{action-count-matched greedy nearest-facility}
 recovery, which adds straight lanes from unexposed distribution centers
 in predicted-DaR order until it reaches the number of lanes activated by
 the full plan. It ships dealer demand from day 0 without hazard-aware
-routing. Ablations remove inventory buffers
+routing; and (B4) a mean-exposure MILP, which holds the candidate generator,
+objective, and solver fixed but replaces upper-quartile ensemble exposure
+with the memberwise mean. Ablations remove inventory buffers
 (A1), hazard-aware candidate routing so that candidate lanes are
 straight and assumed clear when planning (A2), and the structural term
 of \eqref{eq:stci} by setting $\lambda=0$ (A3). All planners use $K=10$,
@@ -555,62 +594,85 @@ transport costs for candidate lanes plus positive incremental transport
 on existing lanes relative to the paired no-action execution. TTR is
 reported only when recovery occurs inside the horizon, alongside the
 fraction of records in which that happens. Reported uncertainty is a
-descriptive 95\% t interval over five network-seed means; intervals for
+descriptive 95\% t interval over ten network-seed means; intervals for
 bounded metrics are intersected with their $[0,1]$ parameter space.
+
+For RQ3, a one-factor-at-a-time study varies the planning quantile
+($q\in\{0.50,0.75,0.90\}$), ranking depth ($K\in\{5,10,15\}$), and ensemble
+size ($M\in\{4,8,16\}$). It uses the first five network seeds, all three
+hazards, and three execution draws, producing 315 records across seven
+configurations. This is a diagnostic sensitivity analysis, not a tuning set;
+we do not select a new primary specification after observing it.
 
 \subsection{Results}
 \input{../results/tables.tex}
 
 \textbf{Prediction.} Table~\ref{tab:pred} shows that methods ignoring time
 over-alarm. Topology-only (B1) and the no-buffer ablation (A1) flag
-nearly every affected dealer but with precision near 0.4, and they place
-stockouts about 16--18 days away from when they actually occur, because
-they assume shortage arrives at onset. Modeling inventory buffers cuts
-the timing error to 7.9 days while keeping precision at 0.96; its Brier
-score is 0.013. Adding lane exposure raises recall from 0.57 to 0.65
-overall, a paired difference of 0.082 (descriptive 95\% t interval
-$[0.0002,0.164]$). The
-gain is concentrated in the river flood, where recall rises from 0.52 to 0.77
+nearly every affected dealer but with precision near 0.39, and their MAE is
+16.5--19.1 days because they place shortage too close to onset. Modeling
+inventory and propagation raises precision to 0.86 and lowers MAE to 9.3
+days; the full model's Brier score is 0.017. Adding lane exposure raises
+recall from 0.52 to 0.60 overall, a paired difference of 0.073 (descriptive
+95\% t interval $[0.032,0.113]$). The gain is concentrated in the river
+flood, where recall rises from 0.40 to 0.62
 because many lanes cross the corridor while their endpoints lie outside
 it. For the hurricane and winter storm, lane exposure changed no
-predictions. Recall remains low for the winter storm (0.35 for both B2
+predictions. Recall remains low for the winter storm (0.37 for both B2
 and GeoRipple): at moderate severity, many realized stockouts arise from
 the combination of partial capacity loss and transit delays, which the
 deterministic forecast simulation does not reproduce.
 
 \textbf{Resolution.} Table~\ref{tab:resolve} shows that GeoRipple's plans
-reduce mean total unmet demand from 1{,}027 to 826 units (19.6\%) at a
-mean cost of 17.7k CU. The paired difference is $-202$ units (descriptive
-95\% t interval $[-357,-46]$), while affected-dealer fill rate increases
-by 0.038 (descriptive 95\% t interval $[0.023,0.054]$). This average masks heterogeneity: unmet demand falls
-from 1{,}333 to 1{,}110 units for the Gulf scenario and from 1{,}333 to
-899 for the river scenario, but rises from 417 to 467 for the winter
-scenario. B3 attains a higher affected-dealer fill rate (0.904) but mean
-total unmet demand is essentially unchanged (1{,}032) at a higher mean
-cost of 21.2k CU, and it recovers within the horizon in only 82\% of
-records. Local transfers can help targeted dealers while moving
-shortages elsewhere, so affected fill rate and system-wide unmet demand
-must be read together.
+do not validate the upper-quartile policy. Mean total unmet demand increases
+from 899 without action to 1{,}053 units at a mean cost of 13.9k CU. The
+paired difference is $+154$ units (descriptive 95\% t interval $[3,305]$),
+while the affected-dealer fill-rate difference is only $+0.003$
+($[-0.013,0.019]$). The mean-exposure MILP (B4) yields 868 unmet units and
+costs 7.3k CU; its $-30$-unit difference from no action has interval
+$[-72,11]$, while the full policy is worse than B4 by 184 units
+($[65,303]$). B3
+achieves the highest affected-dealer fill (0.896) yet increases system-wide
+unmet demand to 970 and recovers in only 82\% of records. These divergences
+show that improving targeted dealers can shift shortage elsewhere.
+
+The hazard strata are also heterogeneous. Relative to no action, the full
+policy changes mean unmet demand by $+372$ units for the Gulf hurricane,
+$-22$ for the river flood, and $+112$ for the winter storm. The failure is
+therefore not merely an averaging artifact: the primary policy worsens two
+of three fixed scenarios under held-out geometry.
 
 \textbf{Negative results.} Hazard-aware routing lowers mean unmet demand
-by 38 units relative to A2, but the paired descriptive 95\% t interval
-($[-104,28]$) includes
-zero; five independent seeds do not resolve this effect. The structural
+by 14 units relative to A2, but the paired descriptive 95\% t interval
+($[-31,3]$) includes zero. The structural
 term (A3) has no effect: the top-$K$ facility set is identical with
-$\lambda=0$ for all 15 network--hazard plans, and the resulting outcomes
+$\lambda=0$ for all 30 network--hazard plans, and the resulting outcomes
 are exactly equal. In these shallow layered DAGs, betweenness adds no
 ranking information beyond exposure and downstream demand.
 Evaluating both components needs networks with multi-sourcing, cross
 docks, and longer recovery lanes.
 
+\input{../results/sensitivity.tex}
+
+\textbf{Sensitivity.} Table~\ref{tab:sensitivity} reinforces the resolution
+finding. Only the median-exposure configuration lowers mean unmet demand
+($-63$ units), and its five-seed interval still includes zero
+($[-161,35]$). The reference and upper-quartile settings change unmet demand
+by $+98$ and $+299$ units, respectively; the latter also activates more
+lanes at higher cost. Changing $K$ from 10 to 15 has no effect because the
+candidate set is already saturated, while changing ensemble size affects
+both recall and recovery. Forecast aggregation is consequently a substantive
+policy choice rather than an innocuous robustness setting.
+
 \textbf{Latency.} End-to-end planning, from forecast exposures to a
-solved plan, took 0.80\,s on average and at most 3.73\,s across the 15
+solved plan, took 0.67\,s on average and at most 3.75\,s across the 30
 distinct network--hazard plans in the recorded Apple Silicon environment.
 These are local wall-clock measurements, not
 a controlled cross-platform performance study.
 
-\subsection{User Study Protocol}
-No user study has been conducted. A future evaluation could use a
+\subsection{Interface-Evaluation Scope}
+The linked interface is a design proposal, not an evaluated contribution; no
+user study has been conducted. A future evaluation could use a
 within-subjects study with
 supply-chain analysts under three conditions: graph view only, map view
 only, and linked GeoRipple views. Tasks include identifying the first
@@ -622,10 +684,11 @@ and System Usability Scale scores, with condition order counterbalanced.
 \subsection{Reproducibility}
 The benchmark code, including network generation, hazard ensembles,
 simulation, candidate generation, the MILP, and the scripts that produce
-Tables~\ref{tab:pred} and~\ref{tab:resolve}, is available at
+Tables~\ref{tab:pred}--\ref{tab:sensitivity}, is available at
 \url{https://github.com/vkondepati/georipple-benchmark}. The artifact pins
 Python dependencies and records package, platform, Git-commit, and
-tracked-worktree provenance with each full run.
+tracked-worktree provenance with each full run. It includes all 90 primary
+records and 315 sensitivity records rather than only aggregate tables.
 
 %% ---------------------------------------------------------------------
 \section{Discussion}
@@ -642,31 +705,42 @@ per location, so planners can prioritize demand points with the least
 slack instead of those closest to the hazard.
 
 \textbf{Why optimize over the whole network.} The action-count-matched greedy
-baseline improves fill among affected dealers but leaves aggregate unmet
-demand approximately unchanged and recovers less often within the
-horizon. Recovery decisions need the whole network's inventory balance;
-otherwise a local transfer can shift shortages to other dealers.
-Hazard-aware routing is operationally plausible, but this benchmark is
-too small to establish its incremental effect.
+baseline improves fill among affected dealers while increasing aggregate
+unmet demand and recovering less often within the horizon. Yet the full MILP
+also increases aggregate unmet demand, so a network-wide objective alone is
+not sufficient when forecast aggregation and execution mismatch. The
+mean-exposure comparator's better result and the sensitivity study make
+calibration under held-out events the immediate research priority.
 
-\textbf{Limitations.} This is an internal synthetic stress test, not
-historical or operational validation. Locations are jittered around
-rounded metro coordinates, existing lanes are straight segments, and
-hazards are stylized. The forecast ensemble and realized footprint come
-from the same hand-authored hazard family, and all members have equal
-weight; elementwise upper-quartile exposure need not correspond to a
-physically coherent scenario. Only five independently generated networks
-support the descriptive intervals, so inference is weak despite 45
-evaluation records. The shallow layered DAG has single-parent dealers
-and only two supplier parents per DC, limiting the structural term and
-rerouting. The model has one commodity, stationary demand, fixed baseline
-allocation, immediate action availability, and a scalar mapping from
-hazard severity to capacity. It omits qualification, contracts, labor,
-power, correlated delays, demand surges, bullwhip effects, and action lead
-times. The visibility graph is not a road router, and the benchmark and
-truth simulators share the same modeling assumptions apart from realized
-geometry and stochastic delays. The proposed database and linked-view
-architecture has not been implemented or evaluated with users.
+\subsection{Threats to Validity}
+\textbf{Construct validity.} Fill rate and TTR$_{95}$ summarize service, but
+do not capture equity, contractual priority, or item criticality. Costs are
+synthetic CU and cannot support economic claims. The one-commodity simulator
+also omits substitution and bill-of-material dependencies.
+
+\textbf{Internal validity.} Forecast and truth simulators share capacity and
+inventory assumptions, although truth uses held-out geometry and stochastic
+delays. Forecast members and truth remain conditional draws from the same
+hand-authored family; this is not an independent data-generating process.
+Elementwise exposure quantiles need not form a physically coherent scenario,
+which plausibly explains the upper-quartile policy's over-action. The
+one-factor-at-a-time study does not reveal parameter interactions.
+
+\textbf{External validity.} This is a synthetic stress test, not historical or
+operational validation. Locations are jittered around metro coordinates,
+lanes are straight segments, hazards are stylized, and visibility-graph paths
+are not road routes. The shallow layered DAG has single-parent dealers and two
+supplier parents per DC, limiting STCI and rerouting. The model assumes
+stationary demand, fixed baseline allocation, immediate actions, and a scalar
+severity-to-capacity mapping; it omits qualification, contracts, labor, power,
+correlated delay, demand surge, bullwhip, and action lead times. The proposed
+application has not been implemented or evaluated with users.
+
+\textbf{Statistical conclusion validity.} Ten network seeds support the
+primary descriptive intervals and five support sensitivity; the three hazard
+families are fixed, not a population sample. Replicated delays within a
+network are not treated as independent. Intervals are descriptive and no
+multiplicity-adjusted confirmatory tests are claimed.
 
 %% ---------------------------------------------------------------------
 \section{Conclusion and Future Work}
@@ -678,12 +752,17 @@ changes to the network. By materializing lanes as geometry, computing a
 disruption wavefront, ranking facilities with a hazard-conditioned
 criticality index, and generating hazard-avoiding recovery lanes for a
 time-expanded optimization, it connects what analysts see on a map with
-what they reason about in a graph. Future work includes learning
+what they reason about in a graph. The held-out synthetic evaluation supports
+the lane-aware prediction component but rejects a general effectiveness claim
+for the reference resolution policy: mean exposure outperforms the chosen
+upper-quartile aggregation, and most sensitivity configurations do not reduce
+system-wide unmet demand. Future work must calibrate and validate policy
+selection out of sample before operational use. It also includes learning
 allocation shares and severities from historical shipment and outage
 data, modeling multi-hazard compound events, extending to international
 networks with multimodal routing, evaluating on observed hazard
 footprints and road-routed lanes over multi-sourced networks, and
-conducting the user study described in Section~\ref{sec:eval}.
+conducting the interface study described in Section~\ref{sec:eval}.
 
 %% ---------------------------------------------------------------------
 \begin{thebibliography}{00}
@@ -705,6 +784,28 @@ pp. 775--788, 2021, doi: 10.1080/09537287.2020.1768450.
 design, adaptation, and control of digital twins in supply chain
 ecosystems,'' \textit{Omega}, vol. 137, Art. no. 103356, 2025,
 doi: 10.1016/j.omega.2025.103356.
+
+\bibitem{corsini2024} R. R. Corsini, A. Costa, S. Fichera, and
+J. M. Framinan, ``Digital twin model with machine learning and optimization
+for resilient production--distribution systems under disruptions,''
+\textit{Computers \& Industrial Engineering}, vol. 191, Art. no. 110145,
+2024, doi: 10.1016/j.cie.2024.110145.
+
+\bibitem{ogunsoto2025} O. V. Ogunsoto, J. Olivares-Aguila, and
+W. ElMaraghy, ``A conceptual digital twin framework for supply chain
+recovery and resilience,'' \textit{Supply Chain Analytics}, vol. 9,
+Art. no. 100091, 2025, doi: 10.1016/j.sca.2024.100091.
+
+\bibitem{liu2026} C. Liu, Y. Wang, L. Purvis, and A. Potter, ``Can digital
+twin technology enhance supply-chain resilience? A systematic literature
+review,'' \textit{Sustainability}, vol. 18, no. 5, Art. no. 2361, 2026,
+doi: 10.3390/su18052361.
+
+\bibitem{zhang2023} G. Zhang, N. Jia, N. Zhu, L. He, and Y. Adulyasak,
+``Humanitarian transportation network design via two-stage distributionally
+robust optimization,'' \textit{Transportation Research Part B:
+Methodological}, vol. 176, Art. no. 102805, 2023,
+doi: 10.1016/j.trb.2023.102805.
 
 \bibitem{ivanov2017review} D. Ivanov, A. Dolgui, B. Sokolov, and
 M. Ivanova, ``Literature review on disruption recovery in the supply

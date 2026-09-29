@@ -7,10 +7,10 @@
   "lateral": 18,
   "alt_source": 0
  },
- "cost_k": 27.15036353744072,
- "unmet_none": 1234.3450749085955,
- "unmet_plan": 1184.8611033253467,
+ "cost_k": 27.144438849751655,
+ "unmet_none": 865.0182061231559,
+ "unmet_plan": 1264.5775229083415,
  "dealer_change_threshold_pp": 0.5,
- "dealers_improved": 14,
- "dealers_worse": 21
+ "dealers_improved": 3,
+ "dealers_worse": 31
 }

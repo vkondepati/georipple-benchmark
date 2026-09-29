@@ -82,7 +82,7 @@ def main():
     lines = [r"\begin{table}[t]", pred_caption,
              r"\label{tab:pred}", r"\centering", r"\small\setlength{\tabcolsep}{2pt}",
              r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lcccc@{}}", r"\toprule",
-             r"Method & Prec.$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\", r"\midrule"]
+             r"Method & Precision$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\", r"\midrule"]
     for key, label in PRED_ROWS:
         p = clustered_stats(
             runs, lambda r, key=key: r["prediction"][key]["precision"], (0, 1))
@@ -102,11 +102,19 @@ def main():
             ptxt += f"$^{{[{p['n_records']}]}}$"
         lines.append(f"{label} & {ptxt} & {cell(rc, '{:.2f}')} & "
                      f"{cell(br, '{:.3f}')} & {cell(mae, '{:.1f}')} \\\\")
-    precision_note = (r"\parbox{\linewidth}{\footnotesize $^{\dagger}$Records without a "
-                      r"positive prediction are excluded; bracketed superscript gives the "
-                      r"included count.}")
-    lines += [r"\bottomrule", r"\end{tabular}}", r"\vspace{2pt}", precision_note,
-              r"\end{table}", ""]
+    precision_note = (
+        r"\parbox{\linewidth}{\footnotesize $^{\dagger}$Undefined precision "
+        r"(no positive prediction) is excluded; $[n]$ gives the included count "
+        r"when below the total.}"
+    )
+    lines += [
+        r"\bottomrule",
+        r"\end{tabular}}",
+        r"\vspace{2pt}",
+        precision_note,
+        r"\end{table}",
+        "",
+    ]
 
     resolution_caption = (r"\caption{Resolution quality under realized hazards "
                           rf"(mean [descriptive 95\% seed-clustered t interval]; {n} records, "
@@ -180,6 +188,9 @@ def main():
         "unmet_full_minus_b4": lambda r: (
             r["resolution"]["Full"]["unmet_units"]
             - r["resolution"]["B4"]["unmet_units"]),
+        "unmet_b4_minus_no_action": lambda r: (
+            r["resolution"]["B4"]["unmet_units"]
+            - r["resolution"]["NoAction"]["unmet_units"]),
     }
     summary["paired_effects"] = {
         name: clustered_stats(runs, getter) for name, getter in effects.items()

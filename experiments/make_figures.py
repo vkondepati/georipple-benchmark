@@ -26,7 +26,7 @@ HERE = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, HERE)
 
-from run_benchmark import PLAN_QUANTILE, nonnegative_int, positive_int
+from run_benchmark import PLAN_QUANTILE, nonnegative_int, positive_int, realized_hazard
 
 from georipple.evaluate import execute_truth
 from georipple.geo import project
@@ -93,6 +93,7 @@ def main():
     a = ap.parse_args()
     T, seed = a.horizon, a.seed
     h = hazards[a.hazard]
+    h_real = realized_hazard(h, seed, a.hazard)
     net = generate(seed)
     ens = forecast_ensemble(h, np.random.default_rng([seed, a.hazard]), M=8)
     exps = ensemble_exposures(net, ens, T)
@@ -142,14 +143,14 @@ def main():
     xc = np.quantile([edge_exposure(cand.geoms, m, T) for m in ens], q, axis=0)
     fe, fc, y, _ = plan_milp(net, cand, xn, xe, xc, T, initial_pipeline(net, T))
     Se, Sc = execution_schedule(net, fe, fc, y, T)
-    r_none, _ = execute_truth(net, h, T, seed)
-    r_plan, cost = execute_truth(net, h, T, seed, cand, Se, Sc, y,
+    r_none, _ = execute_truth(net, h_real, T, seed)
+    r_plan, cost = execute_truth(net, h_real, T, seed, cand, Se, Sc, y,
                                  baseline_shipped=r_none.shipped)
     gain = (r_plan.served[dl].sum(1) - r_none.served[dl].sum(1)) / (net.demand[dl] * T)
 
     fig, ax = plt.subplots(figsize=(3.45, 2.6))
     draw_states(ax)
-    draw_poly(ax, h.poly, color="#1f5fa8", lw=0.9, zorder=1)
+    draw_poly(ax, h_real.poly, color="#1f5fa8", lw=0.9, zorder=1)
     colors = {"lateral": "#1e8449", "alt_source": "#7d3c98"}
     for i in np.where(y)[0]:
         x_, y_ = cand.geoms[i].xy
