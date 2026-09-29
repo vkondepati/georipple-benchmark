@@ -10,6 +10,7 @@ HERE = os.path.dirname(__file__)
 PRED_ROWS = [("B1", "B1 Topology-only"), ("B2", "B2 Node-only spatial"),
              ("A1", "A1 No buffers"), ("Full", "GeoRipple (full)")]
 RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Action-count-matched greedy"),
+            ("B4", "B4 Mean-exposure MILP"),
             ("A2", "A2 No hazard routing"), ("A3", r"A3 $\lambda=0$"),
             ("Full", "GeoRipple (full)")]
 
@@ -176,6 +177,9 @@ def main():
         "unmet_full_minus_a3": lambda r: (
             r["resolution"]["Full"]["unmet_units"]
             - r["resolution"]["A3"]["unmet_units"]),
+        "unmet_full_minus_b4": lambda r: (
+            r["resolution"]["Full"]["unmet_units"]
+            - r["resolution"]["B4"]["unmet_units"]),
     }
     summary["paired_effects"] = {
         name: clustered_stats(runs, getter) for name, getter in effects.items()

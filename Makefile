@@ -1,7 +1,7 @@
 PYTHON ?= python3
 TECTONIC ?= tectonic
 
-.PHONY: install test lint artifacts bench tables figures paper check all
+.PHONY: install test lint artifacts bench sensitivity tables figures paper check all
 install:
 	$(PYTHON) -m pip install -r requirements.lock
 test:
@@ -11,7 +11,10 @@ lint:
 artifacts:
 	$(PYTHON) experiments/check_artifacts.py
 bench:
-	$(PYTHON) experiments/run_benchmark.py --seeds 5 --horizon 28
+	$(PYTHON) experiments/run_benchmark.py --seeds 10 --horizon 28
+sensitivity:
+	$(PYTHON) experiments/run_sensitivity.py --seeds 5 --horizon 28
+	$(PYTHON) experiments/make_sensitivity.py
 tables:
 	$(PYTHON) experiments/make_tables.py
 figures:
@@ -20,4 +23,4 @@ paper:
 	cd paper && $(TECTONIC) georipple_paper.tex
 check: test lint artifacts
 	$(PYTHON) -m compileall -q georipple experiments tests
-all: check bench tables figures
+all: check bench tables sensitivity figures
