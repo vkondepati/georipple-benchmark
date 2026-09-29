@@ -1,5 +1,6 @@
 """Validate checked-in JSON and deterministic table artifacts."""
 import json
+import math
 import subprocess
 import sys
 import tempfile
@@ -32,6 +33,29 @@ def validate_runs(payload, path, n_configs=1):
         raise SystemExit(f"incomplete artifact: {path}; expected {expected} records")
     if payload.get("provenance", {}).get("git_dirty") is not False:
         raise SystemExit(f"non-clean provenance: {path}; regenerate from a clean commit")
+
+
+def equivalent_json(left, right):
+    """Compare generated summaries while tolerating platform-level float noise."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return type(left) is type(right) and left == right
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            equivalent_json(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(
+            equivalent_json(a, b) for a, b in zip(left, right)
+        )
+    numeric = (int, float)
+    if (
+        isinstance(left, numeric)
+        and not isinstance(left, bool)
+        and isinstance(right, numeric)
+        and not isinstance(right, bool)
+    ):
+        return math.isclose(float(left), float(right), rel_tol=1e-10, abs_tol=1e-12)
+    return left == right
 
 
 def main():
@@ -86,7 +110,11 @@ def main():
         ):
             expected = ROOT / "results" / name
             generated = Path(tmp) / name
-            if expected.read_bytes() != generated.read_bytes():
+            if name.endswith(".json"):
+                matches = equivalent_json(strict_json(expected), strict_json(generated))
+            else:
+                matches = expected.read_bytes() == generated.read_bytes()
+            if not matches:
                 raise SystemExit(f"stale artifact: {expected}; run `make tables`")
 
 

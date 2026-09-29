@@ -6,7 +6,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
 
 from make_tables import cell, clustered_stats, finite_mean, load_runs
-from check_artifacts import validate_runs
+from check_artifacts import equivalent_json, validate_runs
 
 
 def test_clustered_stats_uses_seed_as_independent_unit():
@@ -61,3 +61,9 @@ def test_validate_runs_requires_complete_clean_artifact(tmp_path):
     payload["provenance"]["git_dirty"] = True
     with pytest.raises(SystemExit, match="non-clean provenance"):
         validate_runs(payload, path)
+
+
+def test_equivalent_json_tolerates_only_small_numeric_noise():
+    assert equivalent_json({"x": [1.0]}, {"x": [1.0 + 1e-12]})
+    assert not equivalent_json({"x": [1.0]}, {"x": [1.01]})
+    assert not equivalent_json({"x": True}, {"x": 1})
