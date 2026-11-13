@@ -91,7 +91,8 @@ we found that shipping the MILP's existing-lane flows exactly as written (absolu
 dispatch, ablation A4) withholds normal deliveries wherever the cautious forecast is
 wrong. GeoRipple therefore dispatches additively: each existing lane ships the larger
 of its normal quantity and the planned flow. To test that fairly, the code was frozen
-and ten new networks (seeds 10-19) were generated and run once under four conditions:
+and ten new networks (seeds 10-19) were generated and analyzed once under four
+conditions (the run log is in `docs/confirmation-protocol.md`):
 
 | Condition | Lanes | DCs per dealer |
 |---|---|---|
@@ -128,7 +129,7 @@ written in `docs/confirmation-protocol.md`:
   leave less unmet demand than the mean-exposure MILP (990) and the
   action-matched greedy policy (1,327).
 - **Dispatch.** The same plans shipped exactly as written (absolute dispatch,
-  A4) leave 1,238 units unmet. Run with no hazard at all, they cause 846 units
+  A4) leave 1,238 units unmet. Run with no hazard at all, they cause 845 units
   of shortage, while additively dispatched plans change unmet demand by less
   than one unit.
 - All six pre-registered hypotheses are confirmed (Holm-adjusted p from
@@ -136,9 +137,9 @@ written in `docs/confirmation-protocol.md`:
 - With road-routed lanes, dual-sourced dealers, or both (C1-C3), unmet demand
   falls 30-31% and every comparison keeps its sign; lane exposure helps more on
   real roads (+0.062 recall against +0.047).
-- The STCI structural term changed the top-K set in 5 of 120 plans and never
-  moved unmet demand by more than one unit; in 88 of the 120 plans, K or fewer
-  facilities were exposed at all.
+- The STCI structural term changed the top-K set in 5 of 120 plans, and mean
+  unmet demand changed by less than one unit in every condition; in 88 of the
+  120 plans, K or fewer facilities had a nonzero score.
 - 54% of missed stockouts do not happen when the held-out event is replayed
   without transit delays, so they need a forecast that samples delays.
 

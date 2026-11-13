@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(HERE, ".."))
 from georipple.resolve import SHORTAGE_PENALTY  # noqa: E402
 
 KCU_PER_UNMET = SHORTAGE_PENALTY / 1000.0
-PRED_ROWS = [("B1", "B1 Topology-only"), ("B2", "B2 Node-only spatial"),
+PRED_ROWS = [("B1", "B1 Topology-only"), ("B2", "B2 Node-only"),
              ("A1", "A1 No buffers"), ("Full", "GeoRipple (full)")]
 RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Action-count-matched greedy"),
             ("B4", "B4 Mean-exposure MILP"),
@@ -176,8 +176,8 @@ def main():
                "prediction": {}, "resolution": {}}
 
     pred_caption = (r"\caption{Stockout prediction versus realized outcome "
-                    rf"(mean [descriptive 95\% seed-clustered t interval]; {n} records, "
-                    rf"{n_seeds} seeds)}}")
+                    rf"(mean [descriptive 95\% network-clustered t interval]; {n} records, "
+                    rf"{n_seeds} networks)}}")
     lines = [r"\begin{table}[t]", pred_caption,
              r"\label{tab:pred}", r"\centering", r"\small\setlength{\tabcolsep}{2pt}",
              r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lcccc@{}}", r"\toprule",
@@ -216,8 +216,8 @@ def main():
     ]
 
     resolution_caption = (r"\caption{Resolution quality under realized hazards "
-                          rf"(mean [descriptive 95\% seed-clustered t interval]; {n} records, "
-                          rf"{n_seeds} seeds)}}")
+                          rf"(mean [descriptive 95\% network-clustered t interval]; {n} records, "
+                          rf"{n_seeds} networks)}}")
     lines += [r"\begin{table}[t]", resolution_caption,
               r"\label{tab:resolve}", r"\centering", r"\small\setlength{\tabcolsep}{1.5pt}",
               r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{@{}lccccc@{}}", r"\toprule",

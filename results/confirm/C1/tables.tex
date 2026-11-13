@@ -1,5 +1,5 @@
 \begin{table}[t]
-\caption{Stockout prediction versus realized outcome (mean [descriptive 95\% seed-clustered t interval]; 90 records, 10 seeds)}
+\caption{Stockout prediction versus realized outcome (mean [descriptive 95\% network-clustered t interval]; 90 records, 10 networks)}
 \label{tab:pred}
 \centering
 \small\setlength{\tabcolsep}{2pt}
@@ -9,7 +9,7 @@
 Method & Precision$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\
 \midrule
 B1 Topology-only & 0.42 [0.33, 0.50] & 0.89 [0.83, 0.94] & 0.072 [0.064, 0.080] & 18.2 [17.1, 19.4] \\
-B2 Node-only spatial & 0.84 [0.75, 0.92] & 0.63 [0.56, 0.69] & 0.017 [0.013, 0.022] & 9.3 [8.3, 10.2] \\
+B2 Node-only & 0.84 [0.75, 0.92] & 0.63 [0.56, 0.69] & 0.017 [0.013, 0.022] & 9.3 [8.3, 10.2] \\
 A1 No buffers & 0.39 [0.33, 0.45] & 0.98 [0.96, 1.00] & 0.069 [0.061, 0.077] & 16.1 [14.9, 17.2] \\
 GeoRipple (full) & 0.84 [0.77, 0.91] & 0.69 [0.62, 0.76] & 0.017 [0.012, 0.021] & 8.5 [7.5, 9.5] \\
 \bottomrule
@@ -19,7 +19,7 @@ GeoRipple (full) & 0.84 [0.77, 0.91] & 0.69 [0.62, 0.76] & 0.017 [0.012, 0.021] 
 \end{table}
 
 \begin{table}[t]
-\caption{Resolution quality under realized hazards (mean [descriptive 95\% seed-clustered t interval]; 90 records, 10 seeds)}
+\caption{Resolution quality under realized hazards (mean [descriptive 95\% network-clustered t interval]; 90 records, 10 networks)}
 \label{tab:resolve}
 \centering
 \small\setlength{\tabcolsep}{1.5pt}
