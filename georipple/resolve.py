@@ -216,8 +216,24 @@ def plan_milp(net, cand, xn, xe, xc, T, pipe, time_limit=60.0):
     return f[:E], f[E:], (y > 0.5), info
 
 
+def additive_schedule(net, f_exist, f_cand, y, T):
+    """Additive dispatch (GeoRipple): each existing lane ships the larger of its normal
+    daily quantity and the planned flow; activated candidate lanes ship planned flows.
+
+    The realized hazard still curtails what can move, so a correct forecast leaves
+    roughly the planned flows, while a wrong one leaves normal service in place.
+    """
+    S_exist = np.maximum(net.base_f[:, None], f_exist)
+    S_cand = f_cand * y[:, None] if len(y) else np.zeros((0, T))
+    return S_exist, S_cand
+
+
 def execution_schedule(net, f_exist, f_cand, y, T):
-    """Execute the absolute lane flows optimized by the MILP."""
+    """Absolute dispatch (ablation A4): ship the MILP's existing-lane flows as planned.
+
+    Wherever the forecast impairs a lane or facility, this withholds normal
+    replenishment even if the realized hazard never arrives there.
+    """
     S_exist = f_exist
     S_cand = f_cand * y[:, None] if len(y) else np.zeros((0, T))
     return S_exist, S_cand
