@@ -5,3 +5,5 @@ __pycache__/
 paper/*.aux
 paper/*.log
 paper/*.pdf
+
+build/

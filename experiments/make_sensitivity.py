@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 
-from make_tables import clustered_stats, load_runs
+from make_tables import clustered_stats, load_runs, paired
 
 HERE = os.path.dirname(__file__)
 LABELS = {
@@ -57,7 +57,7 @@ def main():
                 lambda run: run["full_absolute"]["unmet_units"] - run["no_action"]["unmet_units"],
             ),
             "fill_delta": clustered_stats(
-                subset, lambda run: run["full"]["fill_rate"] - run["no_action"]["fill_rate"]
+                subset, lambda run: paired(run["full"]["fill_rate"], run["no_action"]["fill_rate"])
             ),
             "cost_k": clustered_stats(subset, lambda run: run["full"]["cost_k"]),
             "actions": clustered_stats(subset, lambda run: run["plan_info"]["activated"]),

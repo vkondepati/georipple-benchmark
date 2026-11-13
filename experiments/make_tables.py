@@ -21,21 +21,32 @@ RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Action-count-matched greedy"),
             ("A2", "A2 No hazard routing"), ("A3", r"A3 $\lambda=0$"),
             ("A4", "A4 Absolute dispatch"),
             ("Full", "GeoRipple (full)")]
-# Pre-registered confirmatory comparisons (two-sided paired t over network means, Holm).
+# Pre-registered confirmatory comparisons (docs/confirmation-protocol.md): two-sided
+# paired t over network means, Holm across all six, confirmed only with the predicted sign.
+def paired(a, b):
+    """Difference of two per-record metrics; undefined (None) if either side is."""
+    return None if a is None or b is None else a - b
+
+
+def _pred(r, method, metric):
+    return r["prediction"][method][metric]
+
+
+def _unmet(r, method):
+    return r["resolution"][method]["unmet_units"]
+
+
 HYPOTHESES = {
-    "H1_recall_full_minus_b2": lambda r: (
-        r["prediction"]["Full"]["recall"] - r["prediction"]["B2"]["recall"]),
-    "H2_mae_full_minus_a1": lambda r: (
-        r["prediction"]["Full"]["mae_days"] - r["prediction"]["A1"]["mae_days"]),
-    "H3_unmet_full_minus_no_action": lambda r: (
-        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["NoAction"]["unmet_units"]),
-    "H4_unmet_full_minus_a4": lambda r: (
-        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["A4"]["unmet_units"]),
-    "H5_unmet_full_minus_b4": lambda r: (
-        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["B4"]["unmet_units"]),
-    "H6_unmet_full_minus_b3": lambda r: (
-        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["B3"]["unmet_units"]),
+    "H1_recall_full_minus_b2": lambda r: paired(_pred(r, "Full", "recall"), _pred(r, "B2", "recall")),
+    "H2_mae_full_minus_a1": lambda r: paired(_pred(r, "Full", "mae_days"), _pred(r, "A1", "mae_days")),
+    "H3_unmet_full_minus_no_action": lambda r: paired(_unmet(r, "Full"), _unmet(r, "NoAction")),
+    "H4_unmet_full_minus_a4": lambda r: paired(_unmet(r, "Full"), _unmet(r, "A4")),
+    "H5_unmet_full_minus_b4": lambda r: paired(_unmet(r, "Full"), _unmet(r, "B4")),
+    "H6_unmet_full_minus_b3": lambda r: paired(_unmet(r, "Full"), _unmet(r, "B3")),
 }
+PREDICTED_SIGNS = {"H1_recall_full_minus_b2": 1, "H2_mae_full_minus_a1": -1,
+                   "H3_unmet_full_minus_no_action": -1, "H4_unmet_full_minus_a4": -1,
+                   "H5_unmet_full_minus_b4": -1, "H6_unmet_full_minus_b3": -1}
 
 
 def objective(run, key):
@@ -76,20 +87,31 @@ def seed_means(runs, getter):
     return np.array([np.mean(v) for _, v in sorted(groups.items())], float)
 
 
-def holm_tests(runs, hypotheses):
-    """Paired two-sided t tests on network means with Holm-adjusted p-values."""
-    raw = {}
-    for name, getter in hypotheses.items():
-        means = seed_means(runs, getter)
-        raw[name] = float(ttest_1samp(means, 0.0).pvalue) if len(means) > 1 else None
-    tested = sorted((p, name) for name, p in raw.items() if p is not None)
-    adjusted, running = {}, 0.0
-    for rank, (p, name) in enumerate(tested):
-        running = max(running, min(1.0, (len(tested) - rank) * p))
+def t_test_p(means):
+    """Two-sided one-sample t p-value; 1.0 when undefined, exact when every mean is equal."""
+    if len(means) < 2:
+        return 1.0
+    if np.ptp(means) == 0:
+        return 1.0 if means[0] == 0 else 0.0
+    p = float(ttest_1samp(means, 0.0).pvalue)
+    return p if np.isfinite(p) else 1.0
+
+
+def holm_tests(runs, hypotheses, signs):
+    """Holm-adjusted paired tests over network means for a fixed family of hypotheses."""
+    raw = {name: t_test_p(seed_means(runs, getter)) for name, getter in hypotheses.items()}
+    adjusted, running, m = {}, 0.0, len(raw)
+    for rank, name in enumerate(sorted(raw, key=lambda k: (raw[k], k))):
+        running = max(running, min(1.0, (m - rank) * raw[name]))
         adjusted[name] = running
-    return {name: {**clustered_stats(runs, getter), "p": raw[name],
-                   "p_holm": adjusted.get(name)}
-            for name, getter in hypotheses.items()}
+    out = {}
+    for name, getter in hypotheses.items():
+        stat = clustered_stats(runs, getter)
+        right_sign = stat["mean"] is not None and np.sign(stat["mean"]) == signs[name]
+        out[name] = {**stat, "p": raw[name], "p_holm": adjusted[name],
+                     "predicted_sign": signs[name],
+                     "confirmed": bool(adjusted[name] < 0.05 and right_sign)}
+    return out
 
 
 def cell(stat, fmt):
@@ -105,6 +127,11 @@ def finite_mean(values):
     values = [float(value) for value in values
               if value is not None and np.isfinite(value)]
     return float(np.mean(values)) if values else None
+
+
+def plan_infos(runs):
+    """plan_info of each distinct (network, hazard) plan."""
+    return list({(r["seed"], r["hazard"]): r["plan_info"] for r in runs}.values())
 
 
 def miss_summary(runs):
@@ -269,14 +296,13 @@ def main():
             "min": float(np.min(finite)) if finite else None,
             "n_plans": len(finite)}
     effects = {
-        "recall_full_minus_b2": lambda r: (
-            r["prediction"]["Full"]["recall"] - r["prediction"]["B2"]["recall"]),
+        "recall_full_minus_b2": lambda r: paired(
+            r["prediction"]["Full"]["recall"], r["prediction"]["B2"]["recall"]),
         "unmet_full_minus_no_action": lambda r: (
             r["resolution"]["Full"]["unmet_units"]
             - r["resolution"]["NoAction"]["unmet_units"]),
-        "fill_full_minus_no_action": lambda r: (
-            r["resolution"]["Full"]["fill_rate"]
-            - r["resolution"]["NoAction"]["fill_rate"]),
+        "fill_full_minus_no_action": lambda r: paired(
+            r["resolution"]["Full"]["fill_rate"], r["resolution"]["NoAction"]["fill_rate"]),
         "unmet_full_minus_a2": lambda r: (
             r["resolution"]["Full"]["unmet_units"]
             - r["resolution"]["A2"]["unmet_units"]),
@@ -298,8 +324,8 @@ def main():
         "unmet_full_minus_a4": lambda r: (
             r["resolution"]["Full"]["unmet_units"]
             - r["resolution"]["A4"]["unmet_units"]),
-        "mae_full_minus_a1": lambda r: (
-            r["prediction"]["Full"]["mae_days"] - r["prediction"]["A1"]["mae_days"]),
+        "mae_full_minus_a1": lambda r: paired(
+            r["prediction"]["Full"]["mae_days"], r["prediction"]["A1"]["mae_days"]),
         "cost_full_minus_a4": lambda r: (
             r["resolution"]["Full"]["cost_k"] - r["resolution"]["A4"]["cost_k"]),
         "objective_full_minus_no_action": lambda r: (
@@ -310,7 +336,12 @@ def main():
     summary["paired_effects"] = {
         name: clustered_stats(runs, getter) for name, getter in effects.items()
     }
-    summary["hypotheses"] = holm_tests(runs, HYPOTHESES)
+    summary["hypotheses"] = holm_tests(runs, HYPOTHESES, PREDICTED_SIGNS)
+    statuses = [p["status"] for info in plan_infos(runs) for p in info.values()]
+    gaps = [p["gap"] for info in plan_infos(runs) for p in info.values()]
+    summary["solver"] = {"n_plans": len(statuses),
+                         "n_status_nonzero": int(sum(st != 0 for st in statuses)),
+                         "max_gap": float(max(gaps)) if gaps else None}
 
     os.makedirs(a.outdir, exist_ok=True)
     tables_path = os.path.join(a.outdir, "tables.tex")

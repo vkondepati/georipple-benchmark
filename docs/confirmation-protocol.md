@@ -56,3 +56,28 @@ Every quantity is reported whatever its sign. A hypothesis counts as confirmed o
 Holm-adjusted p is below 0.05 and the effect has the predicted sign. If unmet demand falls
 but the realized objective or the false-alarm harm rises, both are reported and no net
 benefit is claimed. No method or setting may be changed after seeing these results.
+
+## Clarifications (added 2026-11-13, after the run started and before any result was read)
+
+Code reviewers found edge cases the text above did not settle. These rules change no
+method or setting; they say how the analysis treats cases the code could otherwise not
+compute.
+
+- A record whose paired difference is undefined (for example recall when no dealer has a
+  hazard-attributable stockout) is dropped from that comparison only. Network means use
+  the remaining records, and the record and network counts are reported.
+- The Holm family is fixed at the six hypotheses. An undefined p-value counts as 1. When
+  every network mean of a difference is identical, p is 1 if that value is 0 and 0
+  otherwise.
+- A batch that stops before writing its file may be rerun unchanged at the same commit.
+  An artifact in which any MILP did not reach its 1% gap fails the artifact check; that
+  condition is rerun unchanged on an unloaded machine, and a repeat failure is reported.
+  Any code change after a confirmation file exists is a deviation and is disclosed.
+- Two known properties of the benchmark, present in the development and confirmation
+  runs alike: (1) for hazard family 0, the forecast ensemble's random stream
+  (`default_rng([seed, 0])`) is the same stream that generates the network
+  (`default_rng(seed)`), so those forecast perturbations are tied to supplier placement;
+  the held-out event and the transit delays use separate streams. (2) On road lanes,
+  candidate routing closes every road piece that touches the buffered forecast union,
+  but the short local legs at each end are not rerouted; any exposure they pick up is
+  charged to the lane during planning and execution.

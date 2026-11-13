@@ -1,12 +1,15 @@
 """Validate checked-in JSON and deterministic table artifacts."""
 import json
 import math
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+CONDITIONS = {"C0": ("straight", 1), "C1": ("road", 1), "C2": ("straight", 2), "C3": ("road", 2)}
 
 
 def strict_json(path):
@@ -50,6 +53,50 @@ def validate_runs(payload, path, n_configs=1):
         raise SystemExit(f"non-clean provenance: {path}; regenerate from a clean commit")
 
 
+def validate_confirmation(payload, path, cid):
+    """A confirmation file holds exactly its own condition on fresh networks 10-19."""
+    from georipple.hazards import base_hazards
+
+    config, runs = payload.get("config", {}), payload.get("runs", [])
+    lanes, dcs = CONDITIONS[cid]
+    keys = [(r.get("seed"), r.get("hazard"), r.get("truth_rep")) for r in runs]
+    grid = {(s, h.name, k) for s in range(10, 20) for h in base_hazards() for k in range(3)}
+    if config.get("seeds") != 10 or config.get("seed_offset") != 10 \
+            or len(keys) != len(set(keys)) or set(keys) != grid:
+        raise SystemExit(f"{path}: must hold seeds 10-19 x 3 hazards x 3 draws exactly once")
+    expected = {"lanes": lanes, "dealer_dcs": dcs}
+    if (config.get("lanes"), config.get("dealer_dcs")) != (lanes, dcs) \
+            or any(r.get("condition") != expected for r in runs):
+        raise SystemExit(f"{path}: condition does not match {cid} {expected}")
+
+
+def locked_pins():
+    pins = {}
+    for line in (ROOT / "requirements.lock").read_text().splitlines():
+        if "==" in line and not line.startswith((" ", "#")):
+            name, version = line.split("==", 1)
+            pins[name.strip()] = version.split()[0].rstrip("\\").strip()
+    return pins
+
+
+def validate_environment(named_payloads):
+    """Raw artifacts come from one commit and the pinned Python 3.11 environment."""
+    pins, commits = locked_pins(), set()
+    for path, payload in named_payloads:
+        prov = payload.get("provenance", {})
+        if not str(prov.get("python", "")).startswith("3.11."):
+            raise SystemExit(f"{path}: produced with Python {prov.get('python')}, not 3.11")
+        for name, version in prov.get("packages", {}).items():
+            if pins.get(name) != version:
+                raise SystemExit(f"{path}: {name}=={version} differs from requirements.lock")
+        commit = prov.get("git_commit") or ""
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise SystemExit(f"{path}: missing or malformed git commit")
+        commits.add(commit)
+    if len(commits) > 1:
+        raise SystemExit(f"raw artifacts come from more than one commit: {sorted(commits)}")
+
+
 def equivalent_json(left, right):
     """Compare generated summaries while tolerating platform-level float noise."""
     if isinstance(left, bool) or isinstance(right, bool):
@@ -71,9 +118,6 @@ def equivalent_json(left, right):
     ):
         return math.isclose(float(left), float(right), rel_tol=1e-10, abs_tol=1e-12)
     return left == right
-
-
-CONDITIONS = ("C0", "C1", "C2", "C3")
 
 
 def regenerated(tmp):
@@ -111,8 +155,11 @@ def main():
     for path in runs:
         payload = payloads[path]
         validate_runs(payload, path, max(1, len(payload.get("configs", []))))
+    for cid in CONDITIONS:
+        path = results / "confirm" / f"{cid}.json"
+        validate_confirmation(payloads[path], path, cid)
+    validate_environment([(path, payloads[path]) for path in runs])
 
-    sys.path.insert(0, str(ROOT))
     from georipple.roads import load_roads
     if not load_roads().is_connected():
         raise SystemExit("data/us-primary-roads.json.gz is not one connected road network")

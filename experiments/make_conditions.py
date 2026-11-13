@@ -1,14 +1,24 @@
 """Summarize the confirmation batch (network seeds 10-19) across lane and sourcing conditions.
 
 Reads results/confirm/C*.json and writes results/conditions.tex and
-results/conditions_summary.json. H1-H4 are the pre-registered comparisons; in C0 they are
-confirmatory (Holm-adjusted), in C1-C3 they are replications reported descriptively.
+results/conditions_summary.json. H1-H6 are the pre-registered comparisons
+(docs/confirmation-protocol.md); in C0 they are confirmatory (Holm-adjusted), in C1-C3
+they are paired robustness checks on the same networks, reported descriptively.
 """
 import argparse
 import json
 import os
 
-from make_tables import HYPOTHESES, cell, clustered_stats, holm_tests, load_runs
+from make_tables import (
+    HYPOTHESES,
+    PREDICTED_SIGNS,
+    cell,
+    clustered_stats,
+    holm_tests,
+    load_config,
+    load_runs,
+    miss_summary,
+)
 
 HERE = os.path.dirname(__file__)
 CONDITIONS = [
@@ -23,7 +33,7 @@ def unmet_difference(a, b):
     return lambda r: r["resolution"][a]["unmet_units"] - r["resolution"][b]["unmet_units"]
 
 
-def condition_summary(runs):
+def condition_summary(runs, top_k):
     plans = {(r["seed"], r["hazard"]): r for r in runs}
     return {
         "n_records": len(runs),
@@ -36,7 +46,7 @@ def condition_summary(runs):
             runs, lambda r: r["resolution"]["NoAction"]["unmet_units"]),
         "unmet_full": clustered_stats(runs, lambda r: r["resolution"]["Full"]["unmet_units"]),
         "cost_full": clustered_stats(runs, lambda r: r["resolution"]["Full"]["cost_k"]),
-        "hypotheses": holm_tests(runs, HYPOTHESES),
+        "hypotheses": holm_tests(runs, HYPOTHESES, PREDICTED_SIGNS),
         "unmet_full_minus_a2": clustered_stats(runs, unmet_difference("Full", "A2")),
         "unmet_full_minus_a3": clustered_stats(runs, unmet_difference("Full", "A3")),
         "unmet_b4_minus_no_action": clustered_stats(runs, unmet_difference("B4", "NoAction")),
@@ -44,8 +54,10 @@ def condition_summary(runs):
         "stci_topk_changed_with_lambda0": int(
             sum(r["stci_top_changed_lambda0"] for r in plans.values())),
         "stci_plans": len(plans),
-        "stci_plans_with_nonzero_at_most_10": int(
-            sum(r["stci_nonzero"] <= 10 for r in plans.values())),
+        "top_k": top_k,
+        "stci_plans_with_nonzero_at_most_k": int(
+            sum(r["stci_nonzero"] <= top_k for r in plans.values())),
+        "misses": miss_summary(runs),
         "false_alarm": {
             key: clustered_stats(runs, lambda r, key=key: r["false_alarm"][key]["unmet_delta"])
             for key in runs[0]["false_alarm"]},
@@ -75,9 +87,12 @@ def main():
         r" & & (H1) & (H2) & none (H3) & A4 (H4) & B4 (H5) & B3 (H6) & top-$K$\\",
         r"\midrule",
     ]
+    pooled = []
     for cid, label in CONDITIONS:
-        runs = load_runs(os.path.join(a.confirm_dir, f"{cid}.json"))
-        s = condition_summary(runs)
+        path = os.path.join(a.confirm_dir, f"{cid}.json")
+        runs = load_runs(path)
+        pooled += runs
+        s = condition_summary(runs, load_config(path).get("top_k", 10))
         summary["conditions"][cid] = s
         h = s["hypotheses"]
         lines.append(
@@ -89,6 +104,7 @@ def main():
             f"{cell(h['H5_unmet_full_minus_b4'], '{:.0f}')} & "
             f"{cell(h['H6_unmet_full_minus_b3'], '{:.0f}')} & "
             f"{s['stci_topk_changed_with_lambda0']}/{s['stci_plans']} \\\\")
+    summary["misses_pooled"] = miss_summary(pooled)
     lines += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
     os.makedirs(a.outdir, exist_ok=True)
     for name, content in (
