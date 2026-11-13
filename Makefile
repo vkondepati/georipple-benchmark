@@ -1,10 +1,10 @@
 PYTHON ?= python3
-TECTONIC ?= tectonic
 TIGER_ZIP ?= tl_2023_us_primaryroads.zip
 BUILD ?= build
+FIGURES ?= $(BUILD)/figures
 CONFIRM = --seeds 10 --seed-offset 10 --horizon 28
 
-.PHONY: install test lint artifacts bench confirm sensitivity collect tables figures roads gate paper check all
+.PHONY: install test lint artifacts bench confirm sensitivity collect tables figures roads gate check all
 install:
 	$(PYTHON) -m pip install -r requirements.lock
 test:
@@ -35,12 +35,10 @@ tables:
 gate:
 	$(PYTHON) experiments/regression_gate.py --new results/runs.json
 figures:
-	$(PYTHON) experiments/make_figures.py --seed 0 --hazard 0
-	$(PYTHON) experiments/make_figures.py --seed 0 --hazard 0 --lanes road
+	$(PYTHON) experiments/make_figures.py --seed 0 --hazard 0 --outdir $(FIGURES)
+	$(PYTHON) experiments/make_figures.py --seed 0 --hazard 0 --lanes road --outdir $(FIGURES)
 roads:
 	$(PYTHON) experiments/prepare_roads.py $(TIGER_ZIP)
-paper:
-	cd paper && $(TECTONIC) georipple_paper.tex
 check: test lint artifacts
 	$(PYTHON) -m compileall -q georipple experiments tests
 # From a clean checkout: every raw run, then tables, the gate, and the checks.

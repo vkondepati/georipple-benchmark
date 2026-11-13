@@ -31,7 +31,7 @@ Step by step:
 make bench confirm sensitivity  # raw runs into build/ (ignored)
 make collect tables             # copy them into results/ and regenerate every table
 make gate                       # compare results/runs.json with the published artifact
-make figures                    # static map figures (straight and road lanes)
+make figures                    # map figures for one network, into build/figures/
 ```
 
 Raw runs write to `build/` first so that one run never sees another's output as a
@@ -83,7 +83,6 @@ artifact existed.
 | `experiments/make_figures.py` | Static map figures for one development network |
 | `experiments/prepare_roads.py` | Builds `data/us-primary-roads.json.gz` from Census TIGER/Line |
 | `experiments/check_artifacts.py` | Artifact gate used by `make check` |
-| `paper/` | Pre-review manuscript draft and its figures; the camera-ready source is not kept here |
 
 ## Evaluation design
 

@@ -150,7 +150,7 @@ def main():
     summaries = [results / "summary.json", results / "sensitivity_summary.json",
                  results / "conditions_summary.json",
                  *(results / "confirm" / cid / "summary.json" for cid in CONDITIONS)]
-    others = [ROOT / "paper" / "figures" / "figure_stats.json", ROOT / "data" / "us-states.json"]
+    others = [ROOT / "data" / "us-states.json"]
     payloads = {path: strict_json(path) for path in runs + summaries + others}
     for path in runs:
         payload = payloads[path]

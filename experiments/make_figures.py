@@ -88,7 +88,7 @@ def main():
     ap.add_argument("--hazard", type=int, choices=range(len(hazards)), default=0)
     ap.add_argument("--horizon", type=positive_int, default=28)
     ap.add_argument("--lanes", choices=LANE_MODELS, default="straight")
-    ap.add_argument("--outdir", default=os.path.join(HERE, "..", "paper", "figures"))
+    ap.add_argument("--outdir", default=os.path.join(HERE, "..", "build", "figures"))
     a = ap.parse_args()
     T, seed = a.horizon, a.seed
     tag = "" if a.lanes == "straight" else f"_{a.lanes}"
