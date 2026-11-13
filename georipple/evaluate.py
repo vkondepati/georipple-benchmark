@@ -12,6 +12,20 @@ def truth_delays(net, seed, T):
     return np.random.default_rng([seed, 7]).poisson(DELAY_RATE, (len(net.src), T))
 
 
+
+def classify_misses(truth, predicted, replay_stockout):
+    """Split missed hazard-attributable stockouts (dealer masks) into two kinds.
+
+    A forecast miss also stocks out in a delay-free replay of the realized hazard, so a
+    perfect forecast of the event (footprint, timing, severity) would have caught it. A
+    delay-compounded miss does not: it needs the hazard and transit delays together.
+    """
+    missed = truth & ~predicted
+    return {"missed": int(missed.sum()),
+            "missed_forecast": int((missed & replay_stockout).sum()),
+            "missed_delay": int((missed & ~replay_stockout).sum())}
+
+
 def _cand_delays(cand, seed, T):
     if not len(cand):
         return np.zeros((0, T), int)
@@ -81,11 +95,17 @@ def prediction_metrics(net, p, sig_hat, sigma_true, T, truth_mask):
             "n_true": int(truth.sum()), "n_pred": int(pred.sum())}
 
 
+def unmet_units(net, r):
+    """Unmet demand summed over every dealer and day."""
+    dl = net.dealers
+    return float((net.demand[dl, None] - r.served[dl]).clip(0).sum())
+
+
 def resolution_metrics(net, r, affected, h_real, T, cost):
     dl = net.dealers
     A = dl[affected]
     dem = net.demand
-    unmet = float((dem[dl, None] - r.served[dl]).clip(0).sum())
+    unmet = unmet_units(net, r)
     if len(A) == 0:
         return {"fill_rate": None, "unmet_units": unmet, "ttr95_days": None,
                 "ttr95_recovered": False, "cost_k": cost / 1000.0, "n_affected": 0}

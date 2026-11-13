@@ -60,8 +60,22 @@ class Network:
         return out
 
 
-def generate(seed, n_dc=60, n_dealer=600, jitter_dc=40.0, jitter_dealer=50.0):
-    """Generate a network whose facilities cluster around U.S. metros."""
+def _checked_shares(dealer_shares, n_dc):
+    shares = tuple(float(s) for s in dealer_shares)
+    if (not shares or len(shares) > n_dc or min(shares) <= 0.0
+            or abs(sum(shares) - 1.0) > 1e-9):
+        raise ValueError("dealer_shares must be positive, sum to 1, and fit within n_dc")
+    return shares
+
+
+def generate(seed, n_dc=60, n_dealer=600, jitter_dc=40.0, jitter_dealer=50.0,
+             dealer_shares=(1.0,)):
+    """Generate a network whose facilities cluster around U.S. metros.
+
+    ``dealer_shares`` splits each dealer's demand over its nearest DCs: the i-th nearest
+    DC supplies share i. Lanes are straight; ``lanes.enrich_lanes`` can redraw them.
+    """
+    shares = _checked_shares(dealer_shares, n_dc)
     rng = np.random.default_rng(seed)
     names, cxy, pop = city_table()
     idx = {nm: i for i, nm in enumerate(names)}
@@ -83,23 +97,21 @@ def generate(seed, n_dc=60, n_dealer=600, jitter_dc=40.0, jitter_dealer=50.0):
     demand = np.zeros(len(kind))
     demand[r_ids] = rng.lognormal(np.log(10.0), 0.4, n_dealer)
 
-    src, dst = [], []
+    src, dst, flow = [], [], []
     dc_out = np.zeros(len(kind))
-    for r in r_ids:                                   # dealer <- nearest DC
-        k = dc_ids[np.argmin(np.linalg.norm(dc_xy - xy[r], axis=1))]
-        src.append(k); dst.append(r)
-        dc_out[k] += demand[r]
+    for r in r_ids:                                   # dealer <- nearest DC(s)
+        nearest = np.argsort(np.linalg.norm(dc_xy - xy[r], axis=1), kind="stable")
+        for share, j in zip(shares, nearest, strict=False):
+            k = dc_ids[j]
+            src.append(k); dst.append(r); flow.append(share * demand[r])
+            dc_out[k] += share * demand[r]
     for k in dc_ids:                                  # DC <- 2 nearest suppliers
         if dc_out[k] == 0:
             continue
         d = np.linalg.norm(sup_xy - xy[k], axis=1)
         for s in sup_ids[np.argsort(d)[:2]]:
-            src.append(s); dst.append(k)
-    src, dst = np.array(src), np.array(dst)
-
-    base_f = np.where(kind[dst] == DEALER, demand[dst], 0.0)
-    to_dc = kind[dst] == DC
-    base_f[to_dc] = 0.5 * dc_out[dst[to_dc]]
+            src.append(s); dst.append(k); flow.append(0.5 * dc_out[k])
+    src, dst, base_f = np.array(src), np.array(dst), np.array(flow)
 
     out = np.bincount(src, base_f, len(kind))
     prod = np.where(kind == SUP, 1.15 * out, 0.0)

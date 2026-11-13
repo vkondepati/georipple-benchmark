@@ -8,7 +8,7 @@ fill rate under the plan versus no action (ground-truth execution).
 State outlines: data/us-states.json (U.S. Census Bureau cartographic
 boundaries, 2022 vintage, 1:20,000,000 scale).
 
-Usage: python experiments/make_figures.py --seed 0 --hazard 0
+Usage: python experiments/make_figures.py --seed 0 --hazard 0 [--lanes road]
 """
 import argparse
 import json
@@ -26,26 +26,24 @@ HERE = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, HERE)
 
-from run_benchmark import PLAN_QUANTILE, nonnegative_int, positive_int, realized_hazard
+from run_benchmark import (
+    LANE_MODELS,
+    build_plan,
+    lane_model,
+    nonnegative_int,
+    positive_int,
+    realized_hazard,
+)
 
 from georipple.evaluate import execute_truth
 from georipple.geo import project
-from georipple.hazards import (
-    base_hazards,
-    edge_exposure,
-    forecast_ensemble,
-)
+from georipple.hazards import base_hazards, forecast_ensemble
+from georipple.lanes import enrich_lanes
 from georipple.network import DC, SUP, generate
 from georipple.predict import ensemble_exposures, predict_wavefront, stci
-from georipple.resolve import (
-    execution_schedule,
-    generate_candidates,
-    plan_milp,
-)
-from georipple.routing import HazardRouter
-from georipple.simulate import initial_pipeline
 
-plt.rcParams.update({"font.family": "serif", "font.size": 8})
+# Embed TrueType fonts; Matplotlib's default Type 3 PDF fonts trigger EDAS warnings.
+plt.rcParams.update({"font.family": "serif", "font.size": 8, "pdf.fonttype": 42})
 DEALER_CHANGE_THRESHOLD = 0.005
 
 
@@ -89,12 +87,15 @@ def main():
     ap.add_argument("--seed", type=nonnegative_int, default=0)
     ap.add_argument("--hazard", type=int, choices=range(len(hazards)), default=0)
     ap.add_argument("--horizon", type=positive_int, default=28)
+    ap.add_argument("--lanes", choices=LANE_MODELS, default="straight")
     ap.add_argument("--outdir", default=os.path.join(HERE, "..", "paper", "figures"))
     a = ap.parse_args()
     T, seed = a.horizon, a.seed
+    tag = "" if a.lanes == "straight" else f"_{a.lanes}"
     h = hazards[a.hazard]
     h_real = realized_hazard(h, seed, a.hazard)
-    net = generate(seed)
+    model = lane_model(a.lanes)
+    net = enrich_lanes(generate(seed), model)
     ens = forecast_ensemble(h, np.random.default_rng([seed, a.hazard]), M=8)
     exps = ensemble_exposures(net, ens, T)
     p, sig, dar = predict_wavefront(net, exps, T)
@@ -128,21 +129,16 @@ def main():
         loc="lower right", fontsize=5.5, framealpha=0.9)
     fig.tight_layout(pad=0.2)
     for ext in ("pdf", "png"):
-        path = os.path.join(a.outdir, f"fig_wavefront.{ext}")
+        path = os.path.join(a.outdir, f"fig_wavefront{tag}.{ext}")
         fig.savefig(path + ".tmp", dpi=300, format=ext)
         os.replace(path + ".tmp", path)
     plt.close(fig)
 
-    # ---------- plan (same settings as the benchmark's full method) ----------
-    p_exp = np.mean([xn.max(1) > 0 for xn, _ in exps], 0)
-    router = HazardRouter([m.poly for m in ens])
-    cand, _ = generate_candidates(net, p >= 0.5, stci(net, exps, dar), p_exp, router=router, K=10)
-    q = PLAN_QUANTILE
-    xn = np.quantile([x for x, _ in exps], q, axis=0)
-    xe = np.quantile([x for _, x in exps], q, axis=0)
-    xc = np.quantile([edge_exposure(cand.geoms, m, T) for m in ens], q, axis=0)
-    fe, fc, y, _ = plan_milp(net, cand, xn, xe, xc, T, initial_pipeline(net, T))
-    Se, Sc = execution_schedule(net, fe, fc, y, T)
+    # ---------- plan (the benchmark's full method: additive dispatch) ----------
+    router = model.avoiding([m.poly for m in ens])
+    plans, _ = build_plan(net, ens, exps, p, stci(net, exps, dar), T, router, 10, 60.0,
+                          free_router=model)
+    cand, Se, Sc, y = plans["additive"]
     r_none, _ = execute_truth(net, h_real, T, seed)
     r_plan, cost = execute_truth(net, h_real, T, seed, cand, Se, Sc, y,
                                  baseline_shipped=r_none.shipped)
@@ -169,12 +165,13 @@ def main():
               loc="lower right", fontsize=5.5, framealpha=0.9)
     fig.tight_layout(pad=0.2)
     for ext in ("pdf", "png"):
-        path = os.path.join(a.outdir, f"fig_resolution.{ext}")
+        path = os.path.join(a.outdir, f"fig_resolution{tag}.{ext}")
         fig.savefig(path + ".tmp", dpi=300, format=ext)
         os.replace(path + ".tmp", path)
     plt.close(fig)
 
-    stats = {"seed": seed, "hazard": h.name, "n_predicted": len(pred),
+    stats = {"seed": seed, "hazard": h.name, "lanes": a.lanes, "dispatch": "additive",
+             "n_predicted": len(pred),
              "n_exposed_lanes": int((xe_mean >= 0.5).sum()),
              "activated": {k: int(sum(1 for i in np.where(y)[0] if cand.kind[i] == k))
                            for k in colors},
@@ -183,7 +180,7 @@ def main():
              "dealer_change_threshold_pp": 100 * DEALER_CHANGE_THRESHOLD,
              "dealers_improved": int((gain > DEALER_CHANGE_THRESHOLD).sum()),
              "dealers_worse": int((gain < -DEALER_CHANGE_THRESHOLD).sum())}
-    stats_path = os.path.join(a.outdir, "figure_stats.json")
+    stats_path = os.path.join(a.outdir, f"figure_stats{tag}.json")
     with open(stats_path + ".tmp", "w") as f:
         json.dump(stats, f, indent=1, allow_nan=False)
     os.replace(stats_path + ".tmp", stats_path)

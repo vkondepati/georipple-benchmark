@@ -19,9 +19,9 @@ from georipple.evaluate import (
     resolution_metrics,
 )
 from georipple.hazards import Hazard, base_hazards, forecast_ensemble
+from georipple.lanes import StraightLanes
 from georipple.network import generate
 from georipple.predict import ensemble_exposures, predict_wavefront, stci
-from georipple.routing import HazardRouter
 
 
 def sensitivity_configs():
@@ -48,8 +48,8 @@ def run(seeds, T, time_limit, truth_reps):
                 exps = ensemble_exposures(net, ens, T)
                 p, sig, dar = predict_wavefront(net, exps, T)
                 score = stci(net, exps, dar)
-                router = HazardRouter([member.poly for member in ens])
-                plan, info = build_plan(
+                router = StraightLanes().avoiding([member.poly for member in ens])
+                plans, info = build_plan(
                     net,
                     ens,
                     exps,
@@ -61,7 +61,6 @@ def run(seeds, T, time_limit, truth_reps):
                     time_limit,
                     quantile=config["quantile"],
                 )
-                cand, existing, candidate, activated = plan
                 h_real = realized_hazard(base, seed, hi)
                 calm = Hazard(base.name, h_real.poly, T + 1, T + 1, 0.0)
                 for truth_rep in range(truth_reps):
@@ -69,17 +68,13 @@ def run(seeds, T, time_limit, truth_reps):
                     truth, _ = execute_truth(net, h_real, T, truth_seed)
                     nohaz, _ = execute_truth(net, calm, T, truth_seed)
                     affected = attributable_stockouts(net, truth.sigma, nohaz.sigma, T)
-                    planned, cost = execute_truth(
-                        net,
-                        h_real,
-                        T,
-                        truth_seed,
-                        cand,
-                        existing,
-                        candidate,
-                        activated,
-                        baseline_shipped=truth.shipped,
-                    )
+                    outcome = {}
+                    for rule, (cand, existing, candidate, activated) in plans.items():
+                        planned, cost = execute_truth(
+                            net, h_real, T, truth_seed, cand, existing, candidate,
+                            activated, baseline_shipped=truth.shipped,
+                        )
+                        outcome[rule] = resolution_metrics(net, planned, affected, h_real, T, cost)
                     records.append(
                         {
                             "config": config["id"],
@@ -92,9 +87,8 @@ def run(seeds, T, time_limit, truth_reps):
                             "no_action": resolution_metrics(
                                 net, truth, affected, h_real, T, 0.0
                             ),
-                            "full": resolution_metrics(
-                                net, planned, affected, h_real, T, cost
-                            ),
+                            "full": outcome["additive"],
+                            "full_absolute": outcome["absolute"],
                             "plan_info": {
                                 key: value for key, value in info.items() if key != "top_k"
                             },

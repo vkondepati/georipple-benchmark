@@ -32,15 +32,17 @@ def main():
     summary = {"n_records": len(runs), "n_seed_clusters": n_seeds, "configs": {}}
     lines = [
         r"\begin{table}[t]",
-        rf"\caption{{One-factor-at-a-time sensitivity (means over {n_seeds} seed clusters). "
-        r"$\Delta$ values are relative to paired no action.}",
+        rf"\caption{{One-factor-at-a-time sensitivity on development networks (means over "
+        rf"{n_seeds} networks). $\Delta$ values are relative to paired no action; "
+        r"``abs.'' is absolute dispatch (A4).}",
         r"\label{tab:sensitivity}",
         r"\centering",
         r"\small\setlength{\tabcolsep}{2pt}",
         r"\resizebox{\columnwidth}{!}{%",
-        r"\begin{tabular}{@{}lrrrrr@{}}",
+        r"\begin{tabular}{@{}lrrrrrr@{}}",
         r"\toprule",
-        r"Configuration & Recall & $\Delta$Unmet & $\Delta$Fill & Cost (kCU) & Actions\\",
+        r"Configuration & Recall & $\Delta$Unmet & $\Delta$Unmet abs. & $\Delta$Fill & "
+        r"Cost (kCU) & Actions\\",
         r"\midrule",
     ]
     for config_id in config_order:
@@ -49,6 +51,10 @@ def main():
             "recall": clustered_stats(subset, lambda run: run["prediction"]["recall"], (0, 1)),
             "unmet_delta": clustered_stats(
                 subset, lambda run: run["full"]["unmet_units"] - run["no_action"]["unmet_units"]
+            ),
+            "unmet_delta_absolute": clustered_stats(
+                subset,
+                lambda run: run["full_absolute"]["unmet_units"] - run["no_action"]["unmet_units"],
             ),
             "fill_delta": clustered_stats(
                 subset, lambda run: run["full"]["fill_rate"] - run["no_action"]["fill_rate"]
@@ -60,13 +66,17 @@ def main():
         mean = {name: stat["mean"] for name, stat in stats.items()}
         lines.append(
             f"{LABELS[config_id]} & {mean['recall']:.2f} & {mean['unmet_delta']:.0f} & "
+            f"{mean['unmet_delta_absolute']:.0f} & "
             f"{mean['fill_delta']:.3f} & {mean['cost_k']:.1f} & {mean['actions']:.1f} \\\\"
         )
     unmet = [value["unmet_delta"]["mean"] for value in summary["configs"].values()]
+    absolute = [value["unmet_delta_absolute"]["mean"] for value in summary["configs"].values()]
     summary["robustness"] = {
         "configs_reducing_unmet": sum(value < 0 for value in unmet),
+        "configs_reducing_unmet_absolute": sum(value < 0 for value in absolute),
         "n_configs": len(unmet),
         "unmet_delta_range": [min(unmet), max(unmet)],
+        "unmet_delta_range_absolute": [min(absolute), max(absolute)],
     }
     lines += [r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
     os.makedirs(args.outdir, exist_ok=True)

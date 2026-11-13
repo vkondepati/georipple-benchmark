@@ -2,17 +2,46 @@
 import argparse
 import json
 import os
+import sys
 
 import numpy as np
 from scipy.stats import t as student_t
+from scipy.stats import ttest_1samp
 
 HERE = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(HERE, ".."))
+
+from georipple.resolve import SHORTAGE_PENALTY  # noqa: E402
+
+KCU_PER_UNMET = SHORTAGE_PENALTY / 1000.0
 PRED_ROWS = [("B1", "B1 Topology-only"), ("B2", "B2 Node-only spatial"),
              ("A1", "A1 No buffers"), ("Full", "GeoRipple (full)")]
 RES_ROWS = [("NoAction", "No action"), ("B3", "B3 Action-count-matched greedy"),
             ("B4", "B4 Mean-exposure MILP"),
             ("A2", "A2 No hazard routing"), ("A3", r"A3 $\lambda=0$"),
+            ("A4", "A4 Absolute dispatch"),
             ("Full", "GeoRipple (full)")]
+# Pre-registered confirmatory comparisons (two-sided paired t over network means, Holm).
+HYPOTHESES = {
+    "H1_recall_full_minus_b2": lambda r: (
+        r["prediction"]["Full"]["recall"] - r["prediction"]["B2"]["recall"]),
+    "H2_mae_full_minus_a1": lambda r: (
+        r["prediction"]["Full"]["mae_days"] - r["prediction"]["A1"]["mae_days"]),
+    "H3_unmet_full_minus_no_action": lambda r: (
+        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["NoAction"]["unmet_units"]),
+    "H4_unmet_full_minus_a4": lambda r: (
+        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["A4"]["unmet_units"]),
+    "H5_unmet_full_minus_b4": lambda r: (
+        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["B4"]["unmet_units"]),
+    "H6_unmet_full_minus_b3": lambda r: (
+        r["resolution"]["Full"]["unmet_units"] - r["resolution"]["B3"]["unmet_units"]),
+}
+
+
+def objective(run, key):
+    """Realized MILP objective in kCU: plan cost plus the shortage penalty on unmet demand."""
+    res = run["resolution"][key]
+    return res["cost_k"] + KCU_PER_UNMET * res["unmet_units"]
 
 
 def clustered_stats(runs, getter, bounds=None):
@@ -38,6 +67,31 @@ def clustered_stats(runs, getter, bounds=None):
             "n_records": int(sum(map(len, groups.values()))), "n_seeds": len(cluster_means)}
 
 
+def seed_means(runs, getter):
+    groups = {}
+    for run in runs:
+        value = getter(run)
+        if value is not None and np.isfinite(value):
+            groups.setdefault(run["seed"], []).append(float(value))
+    return np.array([np.mean(v) for _, v in sorted(groups.items())], float)
+
+
+def holm_tests(runs, hypotheses):
+    """Paired two-sided t tests on network means with Holm-adjusted p-values."""
+    raw = {}
+    for name, getter in hypotheses.items():
+        means = seed_means(runs, getter)
+        raw[name] = float(ttest_1samp(means, 0.0).pvalue) if len(means) > 1 else None
+    tested = sorted((p, name) for name, p in raw.items() if p is not None)
+    adjusted, running = {}, 0.0
+    for rank, (p, name) in enumerate(tested):
+        running = max(running, min(1.0, (len(tested) - rank) * p))
+        adjusted[name] = running
+    return {name: {**clustered_stats(runs, getter), "p": raw[name],
+                   "p_holm": adjusted.get(name)}
+            for name, getter in hypotheses.items()}
+
+
 def cell(stat, fmt):
     if stat["mean"] is None or not np.isfinite(stat["mean"]):
         return "--"
@@ -51,6 +105,24 @@ def finite_mean(values):
     values = [float(value) for value in values
               if value is not None and np.isfinite(value)]
     return float(np.mean(values)) if values else None
+
+
+def miss_summary(runs):
+    """Share of missed stockouts that a perfect event forecast would still miss."""
+    def share(sub):
+        missed = sum(r["misses"]["missed"] for r in sub)
+        delay = sum(r["misses"]["missed_delay"] for r in sub)
+        return {"missed": missed, "missed_delay": delay,
+                "missed_forecast": missed - delay,
+                "delay_share": delay / missed if missed else None}
+    return {"all": share(runs),
+            "per_hazard": {hz: share([r for r in runs if r["hazard"] == hz])
+                           for hz in sorted({r["hazard"] for r in runs})}}
+
+
+def load_config(path):
+    with open(path) as f:
+        return json.load(f).get("config", {})
 
 
 def load_runs(path):
@@ -170,6 +242,32 @@ def main():
         }
     plan_changes = {(r["seed"], r["hazard"]): r["stci_top_changed_lambda0"] for r in runs}
     summary["stci_topk_changed_with_lambda0"] = int(sum(plan_changes.values()))
+    if all("stci_nonzero" in r for r in runs):
+        nonzero = {(r["seed"], r["hazard"]): r["stci_nonzero"] for r in runs}
+        top_k = load_config(a.runs).get("top_k", 10)
+        summary["stci_saturation"] = {
+            "n_plans": len(nonzero),
+            "plans_with_at_most_k_nonzero": int(sum(v <= top_k for v in nonzero.values())),
+            "mean_nonzero": float(np.mean(list(nonzero.values()))),
+            "top_k": top_k,
+        }
+    if all("misses" in r for r in runs):
+        summary["misses"] = miss_summary(runs)
+    if all("false_alarm" in r for r in runs):
+        summary["false_alarm"] = {
+            key: {"unmet_delta": clustered_stats(
+                      runs, lambda r, key=key: r["false_alarm"][key]["unmet_delta"]),
+                  "cost_k": clustered_stats(
+                      runs, lambda r, key=key: r["false_alarm"][key]["cost_k"])}
+            for key in runs[0]["false_alarm"]}
+    if all("stci_betweenness_dar_spearman" in r for r in runs):
+        rho = [r["stci_betweenness_dar_spearman"] for r in
+               {(r["seed"], r["hazard"]): r for r in runs}.values()]
+        finite = [v for v in rho if v is not None]
+        summary["stci_betweenness_dar_spearman"] = {
+            "mean": float(np.mean(finite)) if finite else None,
+            "min": float(np.min(finite)) if finite else None,
+            "n_plans": len(finite)}
     effects = {
         "recall_full_minus_b2": lambda r: (
             r["prediction"]["Full"]["recall"] - r["prediction"]["B2"]["recall"]),
@@ -191,10 +289,28 @@ def main():
         "unmet_b4_minus_no_action": lambda r: (
             r["resolution"]["B4"]["unmet_units"]
             - r["resolution"]["NoAction"]["unmet_units"]),
+        "unmet_a4_minus_no_action": lambda r: (
+            r["resolution"]["A4"]["unmet_units"]
+            - r["resolution"]["NoAction"]["unmet_units"]),
+        "unmet_b4abs_minus_no_action": lambda r: (
+            r["resolution"]["B4-abs"]["unmet_units"]
+            - r["resolution"]["NoAction"]["unmet_units"]),
+        "unmet_full_minus_a4": lambda r: (
+            r["resolution"]["Full"]["unmet_units"]
+            - r["resolution"]["A4"]["unmet_units"]),
+        "mae_full_minus_a1": lambda r: (
+            r["prediction"]["Full"]["mae_days"] - r["prediction"]["A1"]["mae_days"]),
+        "cost_full_minus_a4": lambda r: (
+            r["resolution"]["Full"]["cost_k"] - r["resolution"]["A4"]["cost_k"]),
+        "objective_full_minus_no_action": lambda r: (
+            objective(r, "Full") - objective(r, "NoAction")),
+        "objective_full_minus_b4": lambda r: objective(r, "Full") - objective(r, "B4"),
+        "objective_full_minus_b3": lambda r: objective(r, "Full") - objective(r, "B3"),
     }
     summary["paired_effects"] = {
         name: clustered_stats(runs, getter) for name, getter in effects.items()
     }
+    summary["hypotheses"] = holm_tests(runs, HYPOTHESES)
 
     os.makedirs(a.outdir, exist_ok=True)
     tables_path = os.path.join(a.outdir, "tables.tex")
@@ -207,8 +323,10 @@ def main():
     os.replace(summary_path + ".tmp", summary_path)
     print("\n".join(lines))
     print(json.dumps({k: summary[k] for k in (
-        "latency_seconds_full", "per_hazard", "paired_effects",
-        "stci_topk_changed_with_lambda0")}, indent=1))
+        "latency_seconds_full", "per_hazard", "paired_effects", "hypotheses",
+        "stci_topk_changed_with_lambda0", "stci_saturation", "misses", "false_alarm",
+        "stci_betweenness_dar_spearman") if k in summary},
+        indent=1))
 
 
 if __name__ == "__main__":

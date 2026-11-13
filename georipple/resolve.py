@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 import numpy as np
 import scipy.sparse as sp
 from scipy.optimize import Bounds, LinearConstraint, milp
-from shapely.geometry import LineString
 
-from .network import DC, DEALER, ROAD_FACTOR, SUP, lane_tau
+from .lanes import StraightLanes
+from .network import DC, DEALER, SUP, lane_tau
 from .simulate import baseline_schedule, existing_lanes, simulate
 
 # Illustrative synthetic cost units (CU); these are not calibrated dollars.
@@ -28,9 +28,9 @@ class Candidates:
     def __len__(self):
         return len(self.src)
 
-    def add(self, s, d, geom, cap, kind):
+    def add(self, s, d, lane, cap, kind):
         self.src.append(int(s)); self.dst.append(int(d))
-        self.geoms.append(geom); self.km.append(geom.length * ROAD_FACTOR)
+        self.geoms.append(lane.geom); self.km.append(lane.km)
         self.cap.append(float(cap)); self.kind.append(kind)
 
     def arrays(self):
@@ -49,21 +49,31 @@ def _nearest(net, origin, pool, k, radius):
     return [int(pool[i]) for i in order if d[i] <= radius][:k]
 
 
+def _suppliers_of(net, kind):
+    """Every current supplying node of each node of the given kind."""
+    out = {}
+    for s, d in zip(net.src, net.dst, strict=True):
+        if net.kind[d] == kind:
+            out.setdefault(int(d), set()).add(int(s))
+    return out
+
+
+def _new_origins(pool, current):
+    return pool[~np.isin(pool, sorted(current))]
+
+
 def generate_candidates(net, stranded, score, p_exposed, router=None, K=10,
                         k=3, r_lateral=600.0, r_alt=1500.0, tau_max=4):
     """Spatial candidate generation for the top-K STCI facilities.
 
-    ``router`` is a HazardRouter; if None, straight-line lanes are used
-    without hazard checking (ablation A2).
+    ``router`` draws the lanes: a lane model's ``avoiding`` router keeps them clear of
+    the forecast hazard, a bare lane model ignores it (ablation A2), and None means
+    straight lanes. No candidate duplicates a lane the node already receives.
     """
     top = [int(v) for v in np.argsort(-score)[:K] if score[v] > 0]
     ch = net.children()
-    parent = {int(d): int(s) for s, d in zip(net.src, net.dst, strict=True)
-              if net.kind[d] == DEALER}
-    sup_of = {}
-    for s, d in zip(net.src, net.dst, strict=True):
-        if net.kind[d] == DC:
-            sup_of.setdefault(int(d), set()).add(int(s))
+    dcs_of = _suppliers_of(net, DEALER)
+    sup_of = _suppliers_of(net, DC)
 
     target_dealers, target_dcs = set(), set()
     for v in top:
@@ -77,27 +87,28 @@ def generate_candidates(net, stranded, score, p_exposed, router=None, K=10,
     ok_sup = np.where((net.kind == SUP) & (p_exposed < 0.5))[0]
     cand = Candidates()
 
+    route = (router or StraightLanes()).route
+
     def lane(a, b):
-        g = router.route(net.xy[a], net.xy[b]) if router is not None else \
-            LineString([tuple(net.xy[a]), tuple(net.xy[b])])
-        if g is None or lane_tau(g.length * ROAD_FACTOR) > tau_max:
+        found = route(net.xy[a], net.xy[b])
+        if found is None or lane_tau(found.km) > tau_max:
             return None
-        return g
+        return found
 
     for d in sorted(target_dealers):
-        pool = ok_dc[ok_dc != parent.get(d, -1)]
+        pool = _new_origins(ok_dc, dcs_of.get(d, set()))
         for s in _nearest(net, d, pool, k, r_lateral):
-            g = lane(s, d)
-            if g is not None:
-                cand.add(s, d, g, 1.5 * net.demand[d], "lateral")
+            found = lane(s, d)
+            if found is not None:
+                cand.add(s, d, found, 1.5 * net.demand[d], "lateral")
     for v in sorted(target_dcs):
-        pool = np.array([s for s in ok_sup if s not in sup_of.get(v, set())], int)
+        pool = _new_origins(ok_sup, sup_of.get(v, set()))
         if len(pool) == 0:
             continue
         for s in _nearest(net, v, pool, k, r_alt):
-            g = lane(s, v)
-            if g is not None:
-                cand.add(s, v, g, 0.6 * net.node_cap[v] / 1.3, "alt_source")
+            found = lane(s, v)
+            if found is not None:
+                cand.add(s, v, found, 0.6 * net.node_cap[v] / 1.3, "alt_source")
     return cand, top
 
 
@@ -240,10 +251,13 @@ def execution_schedule(net, f_exist, f_cand, y, T):
 
 
 def greedy_nearest(net, stranded, p_exposed, T, r_lateral=600.0,
-                   max_lanes=None, priority=None):
-    """B3: add nearest-DC lanes in priority order, subject to an action budget."""
-    parent = {int(d): int(s) for s, d in zip(net.src, net.dst, strict=True)
-              if net.kind[d] == DEALER}
+                   max_lanes=None, priority=None, router=None):
+    """B3: add nearest-DC lanes in priority order, subject to an action budget.
+
+    ``router`` is the network's lane model (straight if None); hazards are ignored.
+    """
+    route = (router or StraightLanes()).route
+    dcs_of = _suppliers_of(net, DEALER)
     ok_dc = np.where((net.kind == DC) & (p_exposed < 0.5))[0]
     cand = Candidates()
     dealers = np.where(stranded)[0]
@@ -252,12 +266,11 @@ def greedy_nearest(net, stranded, p_exposed, T, r_lateral=600.0,
     for d in dealers:
         if max_lanes is not None and len(cand) >= max_lanes:
             break
-        pool = ok_dc[ok_dc != parent.get(int(d), -1)]
+        pool = _new_origins(ok_dc, dcs_of.get(int(d), set()))
         near = _nearest(net, int(d), pool, 1, r_lateral)
         if near:
             s = near[0]
-            cand.add(s, d, LineString([tuple(net.xy[s]), tuple(net.xy[d])]),
-                     1.5 * net.demand[d], "lateral")
+            cand.add(s, d, route(net.xy[s], net.xy[d]), 1.5 * net.demand[d], "lateral")
     S_cand = np.repeat(np.array([net.demand[d] for d in cand.dst], float)[:, None], T, axis=1) \
         if len(cand) else np.zeros((0, T))
     y = np.ones(len(cand), bool)

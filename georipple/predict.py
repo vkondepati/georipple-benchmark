@@ -48,6 +48,15 @@ def predict_topology_only(net, ens, T):
 
 def stci(net, exps, dar_members, lam=1.0):
     """STCI_v = x_v * DaR_down_v * (1 + lam * B_v), for suppliers and DCs."""
+    xhat, down, B = stci_components(net, exps, dar_members)
+    norm = lambda a: a / a.max() if a.max() > 0 else a
+    score = xhat * norm(down) * (1.0 + lam * norm(B))
+    score[net.kind == DEALER] = 0.0
+    return score
+
+
+def stci_components(net, exps, dar_members):
+    """Expected peak exposure, downstream DaR, and directed betweenness behind STCI."""
     n = net.n
     xhat = np.zeros(n)
     for xn, xe in exps:
@@ -69,7 +78,4 @@ def stci(net, exps, dar_members, lam=1.0):
     g.add_edges_from(zip(net.src.tolist(), net.dst.tolist(), strict=True))
     bc = nx.betweenness_centrality(g, normalized=True)
     B = np.array([bc.get(v, 0.0) for v in range(n)])
-    norm = lambda a: a / a.max() if a.max() > 0 else a
-    score = xhat * norm(down) * (1.0 + lam * norm(B))
-    score[net.kind == DEALER] = 0.0
-    return score
+    return xhat, down, B
