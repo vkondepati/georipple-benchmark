@@ -1,0 +1,42 @@
+\begin{table}[t]
+\caption{Stockout prediction versus realized outcome (mean [descriptive 95\% seed-clustered t interval]; 90 records, 10 seeds)}
+\label{tab:pred}
+\centering
+\small\setlength{\tabcolsep}{2pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Method & Precision$^{\dagger}$ & Recall & Brier & MAE $\sigma_v$ (d)\\
+\midrule
+B1 Topology-only & 0.40 [0.31, 0.48] & 0.88 [0.83, 0.94] & 0.073 [0.065, 0.081] & 18.6 [17.3, 19.9] \\
+B2 Node-only spatial & 0.82 [0.73, 0.91] & 0.63 [0.57, 0.68] & 0.017 [0.013, 0.021] & 9.3 [8.5, 10.1] \\
+A1 No buffers & 0.37 [0.30, 0.44] & 0.97 [0.92, 1.00] & 0.069 [0.062, 0.077] & 16.2 [15.0, 17.5] \\
+GeoRipple (full) & 0.83 [0.75, 0.91] & 0.67 [0.60, 0.74] & 0.016 [0.012, 0.021] & 8.7 [7.7, 9.8] \\
+\bottomrule
+\end{tabular}}
+\vspace{2pt}
+\parbox{\linewidth}{\footnotesize $^{\dagger}$Undefined precision (no positive prediction) is excluded; $[n]$ gives the included count when below the total.}
+\end{table}
+
+\begin{table}[t]
+\caption{Resolution quality under realized hazards (mean [descriptive 95\% seed-clustered t interval]; 90 records, 10 seeds)}
+\label{tab:resolve}
+\centering
+\small\setlength{\tabcolsep}{1.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Method & Fill rate & Unmet (u) & Recovery & TTR$_{95}$ (d)$^{\ddagger}$ & Cost (kCU)\\
+\midrule
+No action & 0.860 [0.843, 0.876] & 1133 [791, 1475] & 82\% [71\%, 93\%] & 20.6 [19.7, 21.6] & 0.0 [0.0, 0.0] \\
+B3 Action-count-matched greedy & 0.895 [0.874, 0.916] & 1327 [938, 1717] & 71\% [60\%, 82\%] & 19.6 [18.1, 21.1] & 23.1 [18.7, 27.5] \\
+B4 Mean-exposure MILP & 0.879 [0.860, 0.898] & 990 [654, 1326] & 84\% [74\%, 94\%] & 20.0 [18.9, 21.1] & 8.5 [6.4, 10.6] \\
+A2 No hazard routing & 0.907 [0.888, 0.925] & 808 [525, 1090] & 88\% [78\%, 97\%] & 18.2 [16.5, 19.9] & 18.8 [16.0, 21.7] \\
+A3 $\lambda=0$ & 0.908 [0.890, 0.927] & 786 [519, 1054] & 88\% [78\%, 97\%] & 18.4 [16.9, 19.9] & 18.0 [15.3, 20.8] \\
+A4 Absolute dispatch & 0.873 [0.861, 0.885] & 1238 [980, 1497] & 82\% [71\%, 93\%] & 21.3 [20.7, 21.9] & 18.1 [15.4, 20.8] \\
+GeoRipple (full) & 0.908 [0.890, 0.927] & 786 [519, 1054] & 88\% [78\%, 97\%] & 18.4 [16.9, 19.9] & 18.0 [15.3, 20.8] \\
+\bottomrule
+\end{tabular}}
+\vspace{2pt}
+\parbox{\linewidth}{\footnotesize $^{\ddagger}$Among records with observed recovery; Recovery is the fraction recovering within the horizon.}
+\end{table}

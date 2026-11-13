@@ -81,3 +81,16 @@ compute.
   candidate routing closes every road piece that touches the buffered forecast union,
   but the short local legs at each end are not rerouted; any exposure they pick up is
   charged to the lane during planning and execution.
+
+## Run log
+
+- 2026-11-13 05:56-06:10 UTC, first attempt at f374dae: all six raw runs (development,
+  sensitivity, C0-C3) were started at once on a machine with four performance cores. Seven
+  comparator plans (four B4, three A2; no GeoRipple plan) hit the 60 s MILP limit, in the
+  development file and in C0-C3. Under the rule above those five files failed the artifact
+  check and were not analyzed.
+- 2026-11-13 06:12-06:25 UTC, rerun of those five files, unchanged at f374dae, at most two
+  at a time: every MILP reached its 1% gap (slowest plan 27.2 s). The sensitivity file from
+  the first attempt passed (slowest plan 59.4 s) and is kept.
+- Tables were generated with the analysis at 54f59c0; the development records still match
+  the published artifact for every unchanged method (`make gate`).

@@ -1,0 +1,978 @@
+{
+ "conditions": {
+  "C0": {
+   "n_records": 90,
+   "n_networks": 10,
+   "recall_full": {
+    "mean": 0.6737704135765616,
+    "ci95": [
+     0.602720924924593,
+     0.7448199022285303
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "precision_full": {
+    "mean": 0.8293892664160627,
+    "ci95": [
+     0.7459873152342764,
+     0.912791217597849
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "mae_full": {
+    "mean": 8.727385437809152,
+    "ci95": [
+     7.685475435235753,
+     9.769295440382551
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_no_action": {
+    "mean": 1133.0178610655582,
+    "ci95": [
+     791.0436221594605,
+     1474.992099971656
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full": {
+    "mean": 786.4016091763673,
+    "ci95": [
+     518.923193338187,
+     1053.8800250145475
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "cost_full": {
+    "mean": 18.034558162196866,
+    "ci95": [
+     15.299443697997152,
+     20.76967262639658
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "hypotheses": {
+    "H1_recall_full_minus_b2": {
+     "mean": 0.04661736523856018,
+     "ci95": [
+      0.013083188966858152,
+      0.08015154151026221
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.01183760622406275,
+     "p_holm": 0.01183760622406275,
+     "predicted_sign": 1,
+     "confirmed": true
+    },
+    "H2_mae_full_minus_a1": {
+     "mean": -7.51056791005621,
+     "ci95": [
+      -9.596126988501366,
+      -5.425008831611054
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 1.9141202786145103e-05,
+     "p_holm": 7.656481114458041e-05,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H3_unmet_full_minus_no_action": {
+     "mean": -346.616251889191,
+     "ci95": [
+      -438.25736013766164,
+      -254.97514364072038
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 1.2887569637677784e-05,
+     "p_holm": 6.443784818838892e-05,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H4_unmet_full_minus_a4": {
+     "mean": -452.0847710748055,
+     "ci95": [
+      -526.3347753167188,
+      -377.83476683289206
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 2.3609179969818115e-07,
+     "p_holm": 1.416550798189087e-06,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H5_unmet_full_minus_b4": {
+     "mean": -203.2954070996608,
+     "ci95": [
+      -284.9749778783613,
+      -121.61583632096028
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.0003215468931579619,
+     "p_holm": 0.0006430937863159238,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H6_unmet_full_minus_b3": {
+     "mean": -540.9906240778175,
+     "ci95": [
+      -711.2046427239587,
+      -370.77660543167633
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 5.139569521907886e-05,
+     "p_holm": 0.00015418708565723659,
+     "predicted_sign": -1,
+     "confirmed": true
+    }
+   },
+   "unmet_full_minus_a2": {
+    "mean": -21.471212834632773,
+    "ci95": [
+     -52.564212839248,
+     9.621787169982454
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full_minus_a3": {
+    "mean": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b4_minus_no_action": {
+    "mean": -143.32084478953027,
+    "ci95": [
+     -176.27415662228628,
+     -110.36753295677427
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b3_minus_no_action": {
+    "mean": 194.37437218862644,
+    "ci95": [
+     63.31760534545273,
+     325.43113903180017
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "stci_topk_changed_with_lambda0": 0,
+   "stci_plans": 30,
+   "top_k": 10,
+   "stci_plans_with_nonzero_at_most_k": 26,
+   "misses": {
+    "all": {
+     "missed": 843,
+     "missed_delay": 453,
+     "missed_forecast": 390,
+     "delay_share": 0.5373665480427047
+    },
+    "per_hazard": {
+     "gulf_hurricane_flood": {
+      "missed": 304,
+      "missed_delay": 148,
+      "missed_forecast": 156,
+      "delay_share": 0.4868421052631579
+     },
+     "river_corridor_flood": {
+      "missed": 129,
+      "missed_delay": 33,
+      "missed_forecast": 96,
+      "delay_share": 0.2558139534883721
+     },
+     "statewide_winter_storm": {
+      "missed": 410,
+      "missed_delay": 272,
+      "missed_forecast": 138,
+      "delay_share": 0.6634146341463415
+     }
+    }
+   },
+   "false_alarm": {
+    "Full": {
+     "mean": -0.9147886696099136,
+     "ci95": [
+      -1.8208054213176488,
+      -0.008771917902178239
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "A4": {
+     "mean": 845.4839299856085,
+     "ci95": [
+      722.5638421922963,
+      968.4040177789207
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "B4": {
+     "mean": -0.8727151588684026,
+     "ci95": [
+      -1.797567836496866,
+      0.052137518760060786
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    }
+   }
+  },
+  "C1": {
+   "n_records": 90,
+   "n_networks": 10,
+   "recall_full": {
+    "mean": 0.6878005392205668,
+    "ci95": [
+     0.6180627846598502,
+     0.7575382937812835
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "precision_full": {
+    "mean": 0.8408750027108803,
+    "ci95": [
+     0.7712513741131128,
+     0.9104986313086478
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "mae_full": {
+    "mean": 8.512405197760183,
+    "ci95": [
+     7.504472722542832,
+     9.520337672977533
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_no_action": {
+    "mean": 1191.4346362030583,
+    "ci95": [
+     866.546589765773,
+     1516.3226826403436
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full": {
+    "mean": 835.1037004313539,
+    "ci95": [
+     551.6205462602256,
+     1118.5868546024822
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "cost_full": {
+    "mean": 20.209011736012826,
+    "ci95": [
+     16.421119366938385,
+     23.996904105087268
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "hypotheses": {
+    "H1_recall_full_minus_b2": {
+     "mean": 0.062134539150043036,
+     "ci95": [
+      0.03183986674397656,
+      0.0924292115561095
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.0012197873600238258,
+     "p_holm": 0.0012197873600238258,
+     "predicted_sign": 1,
+     "confirmed": true
+    },
+    "H2_mae_full_minus_a1": {
+     "mean": -7.540011791863319,
+     "ci95": [
+      -9.5764778270956,
+      -5.503545756631038
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 1.5313455403980643e-05,
+     "p_holm": 6.125382161592257e-05,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H3_unmet_full_minus_no_action": {
+     "mean": -356.33093577170433,
+     "ci95": [
+      -424.5189041019948,
+      -288.1429674414139
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 8.748159767474114e-07,
+     "p_holm": 4.374079883737057e-06,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H4_unmet_full_minus_a4": {
+     "mean": -460.8110253134886,
+     "ci95": [
+      -525.0787469363847,
+      -396.5433036905924
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 5.709805312806003e-08,
+     "p_holm": 3.425883187683602e-07,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H5_unmet_full_minus_b4": {
+     "mean": -195.64743965912118,
+     "ci95": [
+      -264.1682767367983,
+      -127.12660258144406
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.00011688738049713354,
+     "p_holm": 0.00023377476099426707,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H6_unmet_full_minus_b3": {
+     "mean": -518.5319117348118,
+     "ci95": [
+      -681.1069204752853,
+      -355.9569029943384
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 5.000723504078142e-05,
+     "p_holm": 0.00015002170512234427,
+     "predicted_sign": -1,
+     "confirmed": true
+    }
+   },
+   "unmet_full_minus_a2": {
+    "mean": -18.510285491236274,
+    "ci95": [
+     -48.99746247469858,
+     11.976891492226027
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full_minus_a3": {
+    "mean": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b4_minus_no_action": {
+    "mean": -160.68349611258319,
+    "ci95": [
+     -187.58508610896072,
+     -133.78190611620565
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b3_minus_no_action": {
+    "mean": 162.20097596310748,
+    "ci95": [
+     42.73234204424162,
+     281.6696098819733
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "stci_topk_changed_with_lambda0": 0,
+   "stci_plans": 30,
+   "top_k": 10,
+   "stci_plans_with_nonzero_at_most_k": 25,
+   "misses": {
+    "all": {
+     "missed": 849,
+     "missed_delay": 459,
+     "missed_forecast": 390,
+     "delay_share": 0.5406360424028268
+    },
+    "per_hazard": {
+     "gulf_hurricane_flood": {
+      "missed": 309,
+      "missed_delay": 147,
+      "missed_forecast": 162,
+      "delay_share": 0.47572815533980584
+     },
+     "river_corridor_flood": {
+      "missed": 117,
+      "missed_delay": 30,
+      "missed_forecast": 87,
+      "delay_share": 0.2564102564102564
+     },
+     "statewide_winter_storm": {
+      "missed": 423,
+      "missed_delay": 282,
+      "missed_forecast": 141,
+      "delay_share": 0.6666666666666666
+     }
+    }
+   },
+   "false_alarm": {
+    "Full": {
+     "mean": -1.0369986222849648,
+     "ci95": [
+      -1.9673227705423577,
+      -0.10667447402757169
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "A4": {
+     "mean": 902.7763579022461,
+     "ci95": [
+      761.1507435372987,
+      1044.4019722671935
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "B4": {
+     "mean": -1.00036367238391,
+     "ci95": [
+      -1.9349579702611295,
+      -0.06576937450669063
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    }
+   }
+  },
+  "C2": {
+   "n_records": 90,
+   "n_networks": 10,
+   "recall_full": {
+    "mean": 0.6424013973353637,
+    "ci95": [
+     0.5733259913941146,
+     0.7114768032766129
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "precision_full": {
+    "mean": 0.847393607536193,
+    "ci95": [
+     0.753399742387191,
+     0.941387472685195
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "mae_full": {
+    "mean": 8.730848009536947,
+    "ci95": [
+     7.7077322649050215,
+     9.753963754168872
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_no_action": {
+    "mean": 1004.9925644938209,
+    "ci95": [
+     729.1736217026981,
+     1280.8115072849437
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full": {
+    "mean": 692.7332642040537,
+    "ci95": [
+     474.27170028277294,
+     911.1948281253345
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "cost_full": {
+    "mean": 14.71948072617749,
+    "ci95": [
+     11.585854548354067,
+     17.853106904000914
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "hypotheses": {
+    "H1_recall_full_minus_b2": {
+     "mean": 0.047549606469906025,
+     "ci95": [
+      0.01950820936238299,
+      0.07559100357742907
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.003991348632220584,
+     "p_holm": 0.003991348632220584,
+     "predicted_sign": 1,
+     "confirmed": true
+    },
+    "H2_mae_full_minus_a1": {
+     "mean": -8.265408373743767,
+     "ci95": [
+      -10.089360870217732,
+      -6.441455877269803
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 2.9095807289671063e-06,
+     "p_holm": 1.4547903644835532e-05,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H3_unmet_full_minus_no_action": {
+     "mean": -312.2593002897673,
+     "ci95": [
+      -389.3158183568179,
+      -235.2027822227167
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 7.343768567129998e-06,
+     "p_holm": 2.9375074268519993e-05,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H4_unmet_full_minus_a4": {
+     "mean": -457.314723656735,
+     "ci95": [
+      -542.5926476205439,
+      -372.0367996929261
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 7.018656564886867e-07,
+     "p_holm": 4.21119393893212e-06,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H5_unmet_full_minus_b4": {
+     "mean": -188.47386810254943,
+     "ci95": [
+      -254.0509933719699,
+      -122.89674283312897
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.00011124110795765604,
+     "p_holm": 0.0003337233238729681,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H6_unmet_full_minus_b3": {
+     "mean": -313.21734381937347,
+     "ci95": [
+      -437.3804824379099,
+      -189.05420520083703
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.000291866963548071,
+     "p_holm": 0.000583733927096142,
+     "predicted_sign": -1,
+     "confirmed": true
+    }
+   },
+   "unmet_full_minus_a2": {
+    "mean": -11.47082363586798,
+    "ci95": [
+     -31.64370572153004,
+     8.70205844979408
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full_minus_a3": {
+    "mean": -0.0487292012770608,
+    "ci95": [
+     -0.10819570493848901,
+     0.010737302384367417
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b4_minus_no_action": {
+    "mean": -123.78543218721782,
+    "ci95": [
+     -150.15588964740346,
+     -97.41497472703219
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b3_minus_no_action": {
+    "mean": 0.9580435296061921,
+    "ci95": [
+     -88.97731846766516,
+     90.89340552687753
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "stci_topk_changed_with_lambda0": 3,
+   "stci_plans": 30,
+   "top_k": 10,
+   "stci_plans_with_nonzero_at_most_k": 19,
+   "misses": {
+    "all": {
+     "missed": 903,
+     "missed_delay": 480,
+     "missed_forecast": 423,
+     "delay_share": 0.53156146179402
+    },
+    "per_hazard": {
+     "gulf_hurricane_flood": {
+      "missed": 345,
+      "missed_delay": 165,
+      "missed_forecast": 180,
+      "delay_share": 0.4782608695652174
+     },
+     "river_corridor_flood": {
+      "missed": 178,
+      "missed_delay": 64,
+      "missed_forecast": 114,
+      "delay_share": 0.3595505617977528
+     },
+     "statewide_winter_storm": {
+      "missed": 380,
+      "missed_delay": 251,
+      "missed_forecast": 129,
+      "delay_share": 0.6605263157894737
+     }
+    }
+   },
+   "false_alarm": {
+    "Full": {
+     "mean": -0.4831977574073756,
+     "ci95": [
+      -1.1816136679725928,
+      0.21521815315784165
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "A4": {
+     "mean": 773.8092764578535,
+     "ci95": [
+      670.2312709284786,
+      877.3872819872283
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "B4": {
+     "mean": -0.4690991175777149,
+     "ci95": [
+      -1.1397722436570203,
+      0.20157400850159052
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    }
+   }
+  },
+  "C3": {
+   "n_records": 90,
+   "n_networks": 10,
+   "recall_full": {
+    "mean": 0.6568567971588581,
+    "ci95": [
+     0.5832286878995661,
+     0.7304849064181502
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "precision_full": {
+    "mean": 0.8613207988297447,
+    "ci95": [
+     0.7722913105353008,
+     0.9503502871241886
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "mae_full": {
+    "mean": 8.531858539771088,
+    "ci95": [
+     7.424059818134921,
+     9.639657261407255
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_no_action": {
+    "mean": 1084.255823929398,
+    "ci95": [
+     799.3920445819346,
+     1369.1196032768617
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full": {
+    "mean": 744.0450317216576,
+    "ci95": [
+     501.5932285492728,
+     986.4968348940423
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "cost_full": {
+    "mean": 19.290930975835785,
+    "ci95": [
+     14.784164527012592,
+     23.797697424658978
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "hypotheses": {
+    "H1_recall_full_minus_b2": {
+     "mean": 0.06421279181729711,
+     "ci95": [
+      0.03500497246026199,
+      0.09342061117433223
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.0007664272256471729,
+     "p_holm": 0.0007664272256471729,
+     "predicted_sign": 1,
+     "confirmed": true
+    },
+    "H2_mae_full_minus_a1": {
+     "mean": -8.23558656566711,
+     "ci95": [
+      -10.180018578065162,
+      -6.291154553269056
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 5.102445175997927e-06,
+     "p_holm": 2.040978070399171e-05,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H3_unmet_full_minus_no_action": {
+     "mean": -340.2107922077404,
+     "ci95": [
+      -408.7617060913832,
+      -271.6598783240976
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 1.3550500580376426e-06,
+     "p_holm": 6.775250290188213e-06,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H4_unmet_full_minus_a4": {
+     "mean": -452.7886875772015,
+     "ci95": [
+      -531.9696751041944,
+      -373.60770005020856
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 4.05122219024797e-07,
+     "p_holm": 2.430733314148782e-06,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H5_unmet_full_minus_b4": {
+     "mean": -190.11451008503255,
+     "ci95": [
+      -256.69767297453427,
+      -123.53134719553083
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.00011688873245044907,
+     "p_holm": 0.0003506661973513472,
+     "predicted_sign": -1,
+     "confirmed": true
+    },
+    "H6_unmet_full_minus_b3": {
+     "mean": -332.11447942445847,
+     "ci95": [
+      -451.8940064342614,
+      -212.33495241465553
+     ],
+     "n_records": 90,
+     "n_seeds": 10,
+     "p": 0.0001457039968532028,
+     "p_holm": 0.0003506661973513472,
+     "predicted_sign": -1,
+     "confirmed": true
+    }
+   },
+   "unmet_full_minus_a2": {
+    "mean": -13.52675133267114,
+    "ci95": [
+     -34.025036276099364,
+     6.971533610757085
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_full_minus_a3": {
+    "mean": 0.5095449175521184,
+    "ci95": [
+     -0.6157660277952538,
+     1.6348558628994905
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b4_minus_no_action": {
+    "mean": -150.0962821227078,
+    "ci95": [
+     -174.51609833031074,
+     -125.67646591510487
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "unmet_b3_minus_no_action": {
+    "mean": -8.096312783281839,
+    "ci95": [
+     -81.02653034562661,
+     64.83390477906292
+    ],
+    "n_records": 90,
+    "n_seeds": 10
+   },
+   "stci_topk_changed_with_lambda0": 2,
+   "stci_plans": 30,
+   "top_k": 10,
+   "stci_plans_with_nonzero_at_most_k": 18,
+   "misses": {
+    "all": {
+     "missed": 913,
+     "missed_delay": 493,
+     "missed_forecast": 420,
+     "delay_share": 0.5399780941949617
+    },
+    "per_hazard": {
+     "gulf_hurricane_flood": {
+      "missed": 357,
+      "missed_delay": 162,
+      "missed_forecast": 195,
+      "delay_share": 0.453781512605042
+     },
+     "river_corridor_flood": {
+      "missed": 159,
+      "missed_delay": 66,
+      "missed_forecast": 93,
+      "delay_share": 0.41509433962264153
+     },
+     "statewide_winter_storm": {
+      "missed": 397,
+      "missed_delay": 265,
+      "missed_forecast": 132,
+      "delay_share": 0.6675062972292192
+     }
+    }
+   },
+   "false_alarm": {
+    "Full": {
+     "mean": -0.5145151123323299,
+     "ci95": [
+      -1.2632056591238328,
+      0.23417543445917288
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "A4": {
+     "mean": 801.8048947048203,
+     "ci95": [
+      704.857632629346,
+      898.7521567802946
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    },
+    "B4": {
+     "mean": -0.4661716521774369,
+     "ci95": [
+      -1.1541729585896703,
+      0.22182965423479645
+     ],
+     "n_records": 90,
+     "n_seeds": 10
+    }
+   }
+  }
+ },
+ "labels": {
+  "C0": "Straight lanes, 1 DC/dealer",
+  "C1": "Road lanes, 1 DC/dealer",
+  "C2": "Straight lanes, 2 DCs/dealer",
+  "C3": "Road lanes, 2 DCs/dealer"
+ },
+ "misses_pooled": {
+  "all": {
+   "missed": 3508,
+   "missed_delay": 1885,
+   "missed_forecast": 1623,
+   "delay_share": 0.5373432155074116
+  },
+  "per_hazard": {
+   "gulf_hurricane_flood": {
+    "missed": 1315,
+    "missed_delay": 622,
+    "missed_forecast": 693,
+    "delay_share": 0.47300380228136885
+   },
+   "river_corridor_flood": {
+    "missed": 583,
+    "missed_delay": 193,
+    "missed_forecast": 390,
+    "delay_share": 0.33104631217838765
+   },
+   "statewide_winter_storm": {
+    "missed": 1610,
+    "missed_delay": 1070,
+    "missed_forecast": 540,
+    "delay_share": 0.6645962732919255
+   }
+  }
+ }
+}
